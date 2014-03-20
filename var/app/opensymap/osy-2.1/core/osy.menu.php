@@ -238,7 +238,7 @@ $Menu = new Menu();
 <head>
 	<title>Menu</title>
 </head>
-<script language="JavaScript" src="/lib/jquery/jquery-1.10.2.min.js"></script>
+<script language="JavaScript" src="../../../../../lib/jquery/jquery-1.10.2.min.js"></script>
 <script language="JavaScript" src="../js/osy.menu.js"></script>
 <script>
 <?php echo $Menu->jsfnc();?>

@@ -21,7 +21,7 @@ if (empty($i_ttl)){ env::page_error('400',"Instance do not exists"); }
 <head>
     <title><?php echo strip_tags($i_ttl); ?></title>
     <link rel="stylesheet" href="<?php echo OSY_WEB_ROOT; ?>/css/dsk.css"/>
-    <script language="JavaScript" src="/lib/jquery/jquery-1.10.2.min.js"></script>
+    <script language="JavaScript" src="./lib/jquery/jquery-1.10.2.min.js"></script>
     <script language="JavaScript" src="<?php echo OSY_WEB_ROOT; ?>/js/osy.desktop.js"></script>
     <script language="JavaScript" src="<?php echo OSY_WEB_ROOT; ?>/js/osy.window.js"></script>
     <script>

@@ -593,7 +593,6 @@ class osy_view
         self::$__par[$key] = $val;
     }
 }
-
 /*
  * TODO
  *

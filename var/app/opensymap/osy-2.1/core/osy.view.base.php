@@ -24,7 +24,7 @@
 $_GLOBALS['timestart'] = microtime(true);
 ob_start("ob_gzhandler");
 require_once("../lib/l.chk.acc.php");
-require_once("../lib/c.form.php");
+require_once("../lib/c.view.php");
 
 echo '<div id="microtime">'.(microtime(true) - $_GLOBALS['timestart']).' sec. - '.number_format(memory_get_usage(),0,',','.').' byte - dm2</div>';
 ob_end_flush();
