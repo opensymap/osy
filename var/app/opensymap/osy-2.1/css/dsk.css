@@ -1,0 +1,15 @@
+body{margin: 0px 0px 0px 2px; background-color: #9CBDD0;}
+div {font-size: 11px;} 
+div.menu{float: left; padding-left: 5px; padding-right: 5px; cursor: default;} 
+div.osy-desktop {position: absolute; top : 0px; left: 0px; height  : 100%; width   : 100%;}
+div.osy-desktop-titlebar {position: fixed; bottom: 0px; left: 0px; width: 99%; height: 32px; padding-top: 2px; padding-left: 2px;}
+div.osy-desktop-titlebar > div.osy-window-mdi-minimized {float: left; color: white; background-color: #99BAF3; border: 2px solid #122A74; font-weight: bold; overflow: hidden; border-radius: 4px; width: 150px;  font-family: Arial; font-size: 12px; padding: 5px; margin-right: 3px;}
+div.osy-window-mdi{background-color: #99BAF3; border: 2px solid #122A74; border-radius: 4px; position: absolute; box-shadow: 10px 10px 10px black;}		                       
+div.osy-window-mdi-titlebar  {color: white; font-family: Arial; font-size: 12px; padding: 5px;  /*height : 20px;*/ border-bottom: 1px solid #122A74; cursor: default;}
+img.osy-window-mdi-titlebar-ico {margin: 2px;}
+img.osy-window-mdi-titlebar-ico:hover {background-color: red;}
+div.osy-window-mdi-statusbar {padding-left: 10px; color: #fff; font-family: Arial; font-size: 11px; height : 15px;/*border-top: 1px solid #122A74;*/}  
+div.osy-window-mdi-statusbar-resizecorner{position: absolute; bottom:0px; right:0px; width:12px; height:12px; cursor: nw-resize; background-image: url(/img/osy/WinMdiResizeCorner.png); background-repeat: no-repeat;}
+div.osy-window-mdi-maskdesk {position: absolute;}
+div.osy-window-mdi-unselected{background-color: #ccc; border: 2px solid gray; position: absolute; box-shadow: 5px 5px 5px #333;}
+iframe.osy-window-mdi-desk { width : 100%; border: 0px; border-bottom: 1px solid #122A74;}

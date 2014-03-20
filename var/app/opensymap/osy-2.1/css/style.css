@@ -1,0 +1,219 @@
+body {background-color: #ffffff; font-family: arial; font-size: 10px;  margin: 0px; padding: 0px;}
+body.menu {margin: 4px 4px 0px 1px; background-color: #DFDDCE; border-bottom: 1px solid silver;font-family: arial; font-size: 10px;}
+body.fncmain,
+body.osy-body { background-color : #E7EFF7; }
+fieldset {border: 2px groove ThreeDHighlight;}
+input[type=text],input[type=password],textarea,select {border: 1px solid #ddd; border-radius: 3px;}
+input[type=text],input[type=password],textarea {padding: 2px;}
+select{padding: 1px;}
+th {font-size: 11px; text-align: center;}
+td {font-size: 10px; color    : black; text-align: left;}
+th,td{font-family: arial;}
+div.nowrap{ white-space: nowrap;}
+input,select{font-family: Arial; font-size: 11px; font-weight: normal;}
+form {margin: 0px; padding: 0px}
+form#main1 textarea{border-top: 1px solid #716F64; border-left: 1px solid #716F64; border-bottom: 1px solid #F1EFE2; border-right: 1px solid #F1EFE2; font-family : Courier !important; font-size   : 12px !important; width: 96%; margin-right: 3px;}
+
+.link{cursor: pointer}
+.numeric {text-align: right;}
+.ausel{color: black;}
+pre {white-space: pre-wrap;}
+#OsyMenuContainer{background-color: #ceddef; overflow: auto;  height: 100%; font-family: Arial; font-size: 11px; width: 100%;}
+#OsyMenuContainer div.OsyMenu{margin: 2px; border: 1px solid #122A74; overflow: auto; background-color: white; color: black; cursor: pointer; text-align: center;}   
+div#OsyMenuContainer div.OsyMenu p{ margin: 5px;}
+div#OsyMenuContainer dl{margin-left: 8px; margin-top: 0px; margin-bottom: 0px;}    
+div#OsyMenuContainer dd{margin-top: 3px; margin-left: 8px;margin-bottom: 5px;}    
+div#OsyMenuContainer dt{padding: 2px;}
+/*Fine Application menu*/
+div#DataGridPaging div.search{width: 100%;/*background-color: #DFDDCE;*/font-family: Arial;font-size: 11px; border-top: 1px solid white;border-bottom: 1px solid #c0c0c0;}
+div#DataGridPaging div.search p{ margin: 3px;  }
+div#DataGridPaging div#toolbar p{ margin: 3px;}
+div.testata {height: 24px; font-family: Arial; font-size: 16px; font-weight: bold; color: white; padding: 3px; border-top: 4px solid #DFDDCE; border-bottom: 3px solid #DFDDCE;}	    
+div#foot {text-align: center; width: 100%; padding: 2px; background-color: #E7EFF7;}
+div#foot input[type=text]{ text-align: right; border: 0px; background-color: #E7EFF7;}
+div.pnllbl + div.datagrid-1{  border-top  : 1px solid silver;}
+.osy-iframe iframe {border: 0; height: 100%;}
+.osy-iframe-tab iframe {border: 0; height: 100%;}
+
+
+/*definizione presenti in fnc.form.php*/
+.layout_textarea{font-family: Arial; font-size  : 10px;}
+.hidden {display: none;}
+/*tr:first-child th.pnl{border-top: 0px !important;}*/
+/*th.pnl:first-child{border-left: 0px;}
+th.pnl:last-child{border-right: 0px;}*/
+td.clbl {color     : #5C5952; /* border-bottom: 1px solid #7F9DB9;*/ padding-right: 5px;}
+td.clbl  span {display: inline-block; margin-top: 5px;}
+td.ccmp {color: blue; font-weight: bold; font-size: 11px; padding: 5px 5px 0px 0px;}
+.btngrad{background-image: url(../img/btngrad.png);  border: 1px solid #ACAA9B;    height: 21px; font-size: 12px;}
+.btngrad:hover{border: 1px solid black;} 
+th.pnl  label span,td.pnl label span{ font-weight: bold; color: blue;}
+h3 {font-size: 14px;}
+h4 {font-size: 12px; font-weight: normal;}
+button{ padding: 0px; background-color: transparent; border: 0px;}
+table#SysCnt {width: 100%; height: 100%; border: 0px; padding: 0px;}   
+div#menubar{background-color: #122A74; border-bottom: 1px solid #394A75;}
+div#toolbar img{margin-left: 5px;} 
+div#DeskHead{background-color: #BEBFC1; border-top: 1px solid #68728D;}
+/*Componente tab*/
+div.FormTab span{display: inline-block; width: 100px; text-align: center; background-image: url(/img/TabBackground.png); background-repeat: no-repeat; font-weight: normal; height: 25px; margin-right: 1px; white-space: nowrap;}
+div.FormTab span p{margin: 5px; cursor: pointer; color: black;}
+div.FormTab span.FormTabLabelSel{ background-image: url(/img/TabBackgroundSel.png); font-weight: bold;}
+/*Fine Componente Tab*/
+div#foot input{width: 25px;}
+tr.selected td{background-color:#eeeeee; font-weight:bold; font-size:11px;}
+div.FormFooter{position: absolute; bottom: 0px; text-align: right; width: 100%;}
+div.FormFooter p{ margin:5px;} 
+div.FormFooter p .extra{float: left; font-weight: bold;}
+#OsyMenuContainer dt{ cursor: pointer;}
+.osypanel{ border-top: 1px solid white; border-bottom: 1px solid silver;}
+div.osyphotoalbum{ overflow: auto;}
+div.osyphotoalbum > div.cmd {text-align: right;}
+div.osyphotoalbum .photo{border: 1px solid gray;}
+/* regole per l'header fisso */
+div.tablewrap{position: relative; padding-top: 20px}
+div.tablewrap-inner{overflow: auto}
+div.tablewrap thead tr{position: absolute;top: -5px} 
+div.wait {position: absolute; background-color: white; opacity: 0.95; z-index: 1000; top: 0px; left: 0px;}
+div.wait > div.message {position: fixed; text-align:center; top: 48%; width: 100%;  font-size: 12px; font-weight: normal;}
+div.wait > div.message > div.progress_msg {width: 50%; margin: auto;}
+div.wait > div.message > div.progress {width: 50%; border: 1px solid silver; margin: auto;}
+input.datebox {text-align: center;}
+.osycalendar table{box-shadow: 5px 5px 15px;}
+div#head + .datagrid-1 {border-top: 0px !important;}
+/*OSY FORM*/
+.osy-form  {/*border: 1px solid white; border-left: 1px solid silver; border-top: 1px solid silver;*/ width:100%; border-spacing: 0;}
+#osy-form td,
+#osy-form th {vertical-align: top;}
+.osy-form > tbody > tr > td{vertical-align: top; border-left: 1px solid white; border-right: 1px solid silver; border-top: 1px solid white; border-bottom: 1px solid silver;}
+.osy-form td.last{border-bottom: 0px; border-right:0px;}
+#osy-form-panel {border-spacing: 0px; width: 100%; border-bottom: 1px solid white;}
+.form-wizard #osy-form-panel {border: 0px;}
+#osy-form-panel,
+.osy-panel-1 {margin: 0px;}
+#osy-form-panel > tbody > tr > th,
+#osy-form-panel > tbody > tr > td,
+.osy-panel-1 > tbody > tr > th,
+.osy-panel-1 > tbody > tr > td {padding: 0px; border-top: 1px solid white; border-left: 1px solid white; border-bottom: 1px solid silver; border-right: 1px solid silver; font-weight: normal; text-align: left; vertical-align: top;}
+.osy-form-panel-label {font-size: 1.10em; color: #555 !important;}
+#osy-form-panel input,
+#osy-form-panel textarea,
+#osy-form-panel select,
+.osy-panel-1 input,
+.osy-panel-1 textarea,
+.osy-panel-1 select {margin-left: 3px; margin-bottom: 3px;}
+.osy-form label,
+#osy-form-panel label,
+.osy-panel-1 label,
+.osy-panel-2 label {display: block; text-align: left; font-weight: bold; color: #444; margin: 3px;}
+.osy-panel-2 { border-spacing: 0; border-collapse: collapse;}
+.osy-panel-2 > tbody > tr > td {padding: 3px; font-weight: normal; text-align: left; vertical-align: top;}
+.osy-form > tr:last-child > osy-panel-1 {border-right: 0px;}
+.osy-panel-2 {}
+#osy-form .osy-form-footer {position: fixed; bottom: 5px; left: 0px; width: 100%; box-sizing: content-box;}
+#osy-form .osy-form-footer button {float: right; margin : 0px 5px;}
+#osy-form .osy-form-footer .extra {float: left;}
+div.ccmp > table > tbody > tr:last-child td {border-bottom: 1px solid white;}
+/*OSY DATAVIEW TOOLBAR*/
+div.dataview-2 div.search{width: 100%;/*background-color: #DFDDCE;*/font-family: Arial;font-size: 11px; border-top: 1px solid white; border-bottom: 1px solid #c0c0c0;}
+div.dataview-2 div.search p{ margin: 3px;}
+div.dataview-2 div#toolbar p{ margin: 3px;}
+div.dataview-2 div.dataview-2-head + div.datagrid-2 {border-top-color: white !important; border-bottom: 1px solid silver;}
+div.osy-dataview-2-search {border-top: 1px solid #ffe; border-bottom: 1px solid silver; padding: 3px 10px;}
+div.osy-dataview-2-search div.filter-active {padding: 0px;}
+div.osy-dataview-2-search div.filter-active > div.filter{border: 1px dashed black; float:left; padding:3px 20px 3px 3px; margin: 2px; background-image: url(../img/del.gif) ; background-repeat: no-repeat; background-position: center right;}
+div.osy-dataview-2-search + div#tabs {border-top: 1px solid #ffe !important;}
+
+img.toolbar {border: 0px; }
+/*Datagrid 1 css*/
+div.datagrid-1 { border-top  : 1px solid silver; border-right : 1px solid silver;  border-left  : 1px solid silver; background-color: white; overflow: auto;}
+div.datagrid-1 table tr{background-color: white; cursor: default;}
+div.datagrid-1 table th{background   : #ceddef; border-right : 1px solid silver;  border-top   : 1px solid white; border-bottom: 1px solid silver; border-left  : 1px solid white; /*height       : 21px; */}
+div.datagrid-1 table th.AddRecord{ background-image: url(../img/ico.add.gif); background-repeat: no-repeat; background-position: center; cursor: pointer; height: 20px;}
+div.datagrid-1 table td{ border-right : 1px solid #DFDDCE; border-bottom: 1px solid #DFDDCE; height       : 21px; font-weight: normal;}
+/*div#datagrid {border-right : 1px solid #FFFFFF;  border-bottom: 1px solid silver;  border-left  : 1px solid silver;  background-color: white;  overflow: auto;   height: 510px;}*/
+div#datagrid p{ margin: 0px 0px 3px 0px;}
+/*OSY DATAGRID 2*/
+div.datagrid-2 {background-color: white; border-top: 1px solid whitesmoke; /*overflow: auto;*//*per eliminare barra di scroll in chrome*/ width: 100%; box-sizing: border-box;}
+div.datagrid-2 table {width: 100%; border-spacing: 0px; }
+div.datagrid-2 th,
+div.datagrid-2 td {/*line-height: 25px;*/ padding: 5px 3px; font-size: 11px; font-family: Arial; border-bottom: 1px solid #eee; border-left: 1px solid white; border-right: 1px solid #ddd; overflow: hidden; /*white-space: nowrap; */ vertical-align: middle;}
+div.datagrid-2 th {background-color: #ceddef; cursor: default; text-transform:uppercase;}
+/*div.datagrid-2 > table > tbody > tr > td {border-bottom: 1px solid #eee;}*/
+div.datagrid-2 td:first-child,
+div.datagrid-2 th:first-child {border-left: 0px;}
+div.datagrid-2 tr td:last-child,
+div.datagrid-2 tr th:last-child {border-right: 0px;}
+/*div.datagrid-2 td {border-bottom: 1px solid #eee !important; cursor: default;}*/
+div#data-view div.datagrid-2-foot { border-top: 1px solid silver; background-color: #E7EFF7;}
+div.datagrid-2-foot {text-align: center;}
+div.datagrid-2 tbody tr:hover td {background-color: #eee}
+div.datagrid-2 tbody tr.sel td {background-color: #eee;}
+div.datagrid-2 div.datagrid-2-body {overflow: auto;}
+div.datagrid-2 span.tree {display: inline-block; margin-right: 3px; background-repeat: no-repeat; line-height: 20px;   width: 16px; padding: 0px;}
+div.datagrid-2 span.tree-plus-1 {background-image: url(../img/tree.set.png); background-position: 0 0;}
+div.datagrid-2 span.tree-plus-2 {background-image: url(../img/tree.set.png); background-position: 0 -25px;}
+div.datagrid-2 span.tree-plus-3 {background-image: url(../img/tree.set.png); background-position: 0 -50px;}
+div.datagrid-2 span.tree-null {background-repeat: no-repeat; width: 16px; display: inline-block; margin-right: 3px;}
+div.datagrid-2 span.minus {background-position-x: -20px;}
+div.datagrid-2 span.tree-con-1 {background-image: url(../img/tree.set.png); background-position: 0 -75px;}
+div.datagrid-2 span.tree-con-2 {background-image: url(../img/tree.set.png); background-position: 0 -75px;}
+div.datagrid-2 span.tree-con-3 {background-image: url(../img/tree.set.png); background-position: 0 -100px;}
+div.datagrid-2 span.tree-con-4 {background-image: url(../img/tree.set.png); background-position: 0 -125px;}
+div.datagrid-2 tr.hide {display: none;}
+/*div.datagrid-2 table tbody tr:last-child td {border-bottom: 1px solid #eee !important;}*/
+div.datagrid-2 table tbody tr td:last-child {border-right: 0px !important;}
+div.datagrid-2 td.no-data {text-align: center; font-size: 12px;}
+div.datagrid-2-ln-hgt-30 td {line-height: 30px;}
+div.datagrid-2-ln-hgt-30 img {margin-top: 5px;}
+div.datagrid-2 .add-cnt {width: 20px; border-right: 0px; color: white; background-image: url(../img/ico.add.gif); background-repeat: no-repeat; background-position: 50% 50%}
+div.datagrid-2 .add-cnt + th {border-left: 0px}
+div.treegrid table td {padding: 0px !important;}
+div.treegrid table td:first-child {border-left: 0px;}
+.osy-form div.tabs {border-bottom: 0 !important; border-radius: 4px 4px 0px 0px !important;}
+.osy-form div.datagrid-2 {border-bottom: 0px; border-top: 0px;}
+.osy-form div.datagrid-2 tr th:first-child,
+.osy-form div.datagrid-2 tr td:first-child {border-left: 0px;}
+label + .datagrid-2 {border-top: 1px solid silver !important;}
+label + .datagrid-2 th {border-top: 1px solid white !important;}
+
+.pnl div.datagrid-2 td:first-child,
+.pnl div.datagrid-2 th:first-child {border-left: 0px !important;}
+/*GENERIC*/
+.pad-03 {padding: 3px !important;}
+.pad-l-02 {padding-left: 2px !important;}
+/*UI*/
+#tabs,.tabs {background: #E7EFF7 none !important; border: 0px !important;padding: 0px 1px;}
+.ui-tabs-panel > table {width: 100%}
+.no-board {border: 0px !important;}
+label.debug {color: red !important;}
+label.normal {font-size: 11px; font-weight: normal !important}
+.treegrid td {border-top: 0px !important;}
+.osy-multibox table td {white-space: nowrap;}
+div.toolbar {border-bottom: 1px solid silver;}
+/*.ui-tabs-panel > table > tbody > tr:last-child td {border-bottom: 0px !important;}*/
+.osy-radio-list input[type=radio] {margin-top: 0px;}
+div.treegrid-pure td {border-bottom: 0px; line-height: 20px; cursor: default;}
+div.treegrid img.osy-treegrid-ico {margin-right: 3px; vertical-align: middle;}
+div.osy-error {font-weight: bold; color: red;}
+div.osy-error:hover + div.osy-error-msg {display: block; }
+div.osy-error-msg {display: none;  background-color: white; position: absolute; top: 10px; left: 10px; margin-right: 10px; padding: 10px; border: 3px solid #cedded; border-radius: 5px; z-index: 100;}
+div.osy-error-msg:hover {display: block; pointer: default;}
+h4.wizard {font-size: 11px; font-weight: normal;}
+div.osy-iframe iframe{width: 100%; height: 100%;}
+div.osy-iframe-tab iframe{width: 100%; height: 100%;}
+div.osy-iframe div {height: 95%;}
+div.osy-iframe-tab div {height: 95%;}
+/**** autocomplete ******/
+div.autocomplete-box {position: absolute; width: 200px; z-index: 100; background-color: white; border: 1px solid gray; overflow: auto;}
+div.autocomplete-box div.autocomplete-item {line-height: 20px; font-size: 11px; margin: 3px;}
+div.autocomplete-box div.autocomplete-item span {display: none;}
+div.autocomplete-box div.autocomplete-item:hover {text-decoration: underline;}
+div.autocomplete-box div.autocomplete-item span:first-child {display: block;}
+div.autocomplete-box div.sel {background-color: #ceddef; color: black; border-radius: 3px;}
+/*** check-list ***/
+div.osy-check-list {overflow: auto;}
+/***generic class***/
+.left{text-align: left  !important;}
+.center{text-align: center !important;}
+.right{text-align: right  !important;} 
