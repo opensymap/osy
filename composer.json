@@ -1,0 +1,25 @@
+{
+    "name": "opensymap.org/opensymap",
+    "version": "3.1",
+    "homepage": "http://www.opensymap.org/",
+    "type": "library",
+    "description": "Opensymap is a framework for manage rich internet application.",
+    "keywords": ["Framework","Rich application","Store"],
+    "license": "LGPLv3",
+    "authors": [
+    {
+        "name": "Pietro Celeste",
+        "email": "p.celeste@opensymap.org",
+        "homepage": "http://www.opensymap.net/devel/pietro.celeste/"
+    }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+	"dannyvankooten/php-router" : "@stable"
+    },
+    "autoload": {
+        "psr-4": {
+            "Opensymap\\": "vendor/opensymap/src/"
+        }
+    }
+}
