@@ -12,7 +12,7 @@ class DatasourceDbo extends Datasource
     private $queryParams;
     private $orderBy = 1;
     private $fetchMethod;
-    private $rowForPage = 10;
+    private $rowForPage = 0;
     private $rowTotal = 0;
     private $where = array();
     private $page = array(
@@ -30,25 +30,27 @@ class DatasourceDbo extends Datasource
     
     private function buildQuery()
     {
-        $sql = $this->replacePlaceholder($this->query);
+        $sql = trim($this->replacePlaceholder($this->query));
+        $orderby = '';
+
         if (empty($sql)) {
             return;
         }
-        $sql = 'SELECT a.*
-                FROM (
-                    '.$sql.'
-                ) a';
-                
+        //Check if the query is a select query
+        if (stripos($sql,'select') !== false) {
+             $sql = 'SELECT a.*
+                    FROM (
+                        '.$sql.'
+                    ) a ';
+            $this->orderBy = false;
+        }
         if (!empty($this->where)) {
-            $where = '';
             foreach($this->where as $k => $filter) {
                 $where .= (empty($where) ? ''  : ' AND ') . "a.{$filter[0]} {$filter[1]['opr']} '".str_replace("'","''",$filter[1]['val'])."'";
             }
             $sql .= " WHERE " .$where;
         }
-        
-        
-        $orderby = '';
+
         if (!empty($this->orderBy)) {
             $orderby = ' ORDER BY ' . str_replace(
                 array('][','[',']'),
@@ -58,16 +60,18 @@ class DatasourceDbo extends Datasource
         }
         
         if ($this->rowForPage > 0) {
-            $sql = $this->buildQueryPaging($sql,$orderby)
+            $sql = $this->buildQueryPaging($sql,$orderby);
+        } else {
+            if (strtolower(strtok($sql,' ')) == 'select') {
+                $sql .= $orderby;
+            }
         }
-        
-        
-        
+        //die ($sql);
         //var_dump($this->page['current'],$this->rowTotal);
         $this->query = $sql;
     }
     
-    public function buildQueryPaging()
+    public function buildQueryPaging($sql,$orderby)
     {
         try {
             $this->rowTotal = $this->source->exec_unique(
@@ -79,7 +83,10 @@ class DatasourceDbo extends Datasource
         } catch(Exception $e) {
             $this->error[] = $sqlCount."\n".$e->getMessage();
             return;
+        } finally {
+            $sql .= ' '.$orderby;
         }
+        
         $this->page['total'] = ceil($this->rowTotal / $this->rowForPage);
         
         if (empty($this->page['current']) || $this->page['current'] > $this->page['total']) {
@@ -160,9 +167,15 @@ class DatasourceDbo extends Datasource
     public function fill()
     {
         $this->buildQuery();
-        $rs = $this->source->query($this->query);
-        $this->columns = $this->source->get_columns($rs);
-        $this->recordsetRaw = $this->source->fetch_all($rs);
+        try {
+            $rs = $this->source->query($this->query);
+            $this->columns = $this->source->get_columns($rs);
+            $this->recordsetRaw = $this->source->fetch_all($rs);
+        } catch (PDOException $e) {
+            $this->recordsetRaw = array(
+                array($e->getMessage())
+            );
+        }
     }
     
     public function orderBy($val)
