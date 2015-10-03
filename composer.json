@@ -7,18 +7,18 @@
     "keywords": ["Framework","Rich application","Store"],
     "license": "LGPLv3",
     "authors": [
-    {
-        "name": "Pietro Celeste",
-        "email": "p.celeste@opensymap.org",
-        "homepage": "http://www.opensymap.net/devel/pietro.celeste/"
-    }
+        {
+            "name": "Pietro Celeste",
+            "email": "p.celeste@opensymap.org",
+            "homepage": "http://www.opensymap.net/devel/pietro.celeste/"
+        }
     ],
     "require": {
         "php": ">=5.3.0",
         "tecnick.com/tcpdf": "6.2.11",
-        "gregwar/image":"@stable",
+        "gregwar/image":"@stable"
     },
-    "autoload": {
+    "autoload" : {
         "psr-4": {
             "Opensymap\\": "vendor/opensymap/src/"
         }
