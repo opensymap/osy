@@ -15,11 +15,13 @@ use Opensymap\Ocl\Component\Tab;
 use Opensymap\Ocl\Component\Toolbar;
 use Opensymap\Ocl\Component\ComponentFactory;
 use Opensymap\Helper\HelperOsy;
+use Opensymap\Datasource\DatasourceDbo;
 
 class DataView extends ViewOpensymap
 {
     protected $viewBody;
     protected $viewToolbar;
+    protected $datasource;
     protected $__cmd_flt;
     
     protected function init()
@@ -60,7 +62,7 @@ class DataView extends ViewOpensymap
                 'colspan' => 100
             ],
             'parameter' => [
-                'datasource-sql'   => $this->getParam('sql-query'),
+                //'datasource-sql'   => $this->getParam('sql-query'),
                 'row-num'          => $this->getParam('row-num'),
                 'record-add'       => false,
                 'form-related'     => $this->getParam('form-related'),
@@ -70,59 +72,47 @@ class DataView extends ViewOpensymap
         
         $this->viewBody = ComponentFactory::create($parameters);
         $this->viewBody->appendRequired($this->response);
-        
+        $this->datasource = new DatasourceDbo($this->model->dba);
+        $this->datasource->setQuery(
+            $this->getParam('sql-query')
+        );
+        //Set current page, page command, Row for page
+        $this->datasource->setPage(
+            $_REQUEST['data-view_pag'],
+            $_REQUEST['btn_pag'], 
+            $this->getParam('row-num')
+        );
+        //Set order by field
+        $this->datasource->orderBy(
+            $_REQUEST['data-view_order']
+        );
         if (!$this->buildTab()) {
-            //$this->viewBody = new DataGrid('data-view');
             $this->form->put($this->viewBody,'','',100,10); 
             if (!empty($_REQUEST['osy']) && !empty($_REQUEST['osy']['layout'])) {
                 $this->viewBody->par('layout',$_REQUEST['osy']['layout']);
             }
         }
         
-        /*
-        $this->viewBody->setDboHandler($this->model->dba);
-        $this->viewBody->appendRequired($this->response);
-        $this->viewBody->par('colspan','100',function($key,$val,$self){
-            $self->man('onbuild','colspan',function($key, $val,$self)
-            {
-                $cel = $self->closest('td,th');
-                if (!is_object($cel)) return;
-                $cel->att('colspan',$val);
-            });
-        });
-        $this->viewBody->par('datasource-sql',$this->getParam('sql-query'));
-        $this->viewBody->par('row-num',$this->getParam('row-num'));
-        $this->viewBody->par('record-add',false);
-        $this->viewBody->par('form-related',$this->getParam('form-related'));
-        $this->viewBody->par('form-related-ins',$this->getParam('form-related-insert'));
-        $this->viewBody->att('class','');
-        */
+        $this->viewBody->setDatasource($this->datasource);
+        
         if (!empty($_POST['filter'])) {
             foreach($_POST['filter'] as $field => $value) {
-                $this->viewBody->add_filter($field,'%'.str_replace("'","''",$value).'%','like');
+                //$this->viewBody->addFilter($field,'%'.str_replace("'","''",$value).'%','like');
+                $this->datasource->addFilter($field, '%'.str_replace("'","''",$value).'%', 'like');
             }
         }
        
         if($this->getParam('button-insert')=='1') {
-          /*$this->viewToolbar->add(new tag('img'))->att(Array('src'    => '../img/rec_new.gif',
-                                                       'class'  => 'toolbar insert',
-                                                       'alt'    => 'Aggiungi un nuovo record'));*/
             $this->viewToolbar->add(new Tag('span'))->att('class','insert fa fa-plus-square fa-lg');
         }
-        //Aggiungo icona modifica record
-        /*$this->viewToolbar->add(new tag('img'))->att(Array('src'    => '../img/rec_upd.gif',
-                                                    'pk'     => 'req',
-                                                    'class'  => 'toolbar update',
-                                                    'alt'    => 'Modifica il record selezionato'));*/
+
         //Aggiungo eventuali comandi
         if ($this->getParam('FRMCMD')) {
             $this->viewToolbar->add($this->param['FRMCMD']);
         }
+        
         if ($this->getParam('TYP') != 'DTS') {
-            /*$this->viewToolbar->add(new tag('img'))->att(Array('src'    => '../img/rec_src.gif',
-                                                         'alt'    => 'Ricerca dati',
-                                                         'class'  => 'toolbar search',
-                                                         'id'     =>  'button_show_search'));*/
+        
             $this->viewToolbar->add(tag::create('span'))->att('class','search fa fa-filter fa-lg');
         }
         if ($this->getParam('FRMPDF')) {
@@ -160,13 +150,18 @@ class DataView extends ViewOpensymap
         }
         $div = new Dummy('osy-dataview-2-search');
         $div->att('class',"osy-dataview-2-search");
-        $div->par('colspan','100',function($key,$val,$self){
-             $self->man('onbuild','colspan',function($key, $val,$self)
-             {
-                 $cel = $self->closest('td,th');
-                 if (!is_object($cel)) return;
-                 $cel->att('colspan','100');
-             });
+        $div->par('colspan', '100', function($key,$val,$self) {
+            $self->man(
+                'onbuild', 
+                'colspan', 
+                function($key, $val,$self) {
+                    $cel = $self->closest('td,th');
+                    if (!is_object($cel)) {
+                        return;
+                    }
+                    $cel->att('colspan','100');
+                }
+            );
         });
         $this->form->put($div,'','bar-search',2,1);
         $div->add("Cerca");
@@ -180,24 +175,22 @@ class DataView extends ViewOpensymap
         //Contenitore dei filtri attivi
         $div_flt_cnt = $div->add(tag::create("div"))->att('class','filter-active');
         
-        if (array_key_exists('filter',$_POST) && is_array($_POST['filter']))
-        {
-            foreach($_POST['filter'] as $k => $v)
-            {
-              $div_flt = $div_flt_cnt->add(tag::create('div'))->att("class","filter");
-              $div_flt->add(new hidden_box("filter[$k]"))->Att('value',$v);
-              switch($k[0]){
-                case '!':
-                case '€':
-                case '$':
-                case '#':
-                          $k = substr($k,1);
-                          break;
-                case '_':
-                          list($a,$k) = explode(',',$k);
-                          break;
-              }
-              $div_flt->add("$k : $v");
+        if (array_key_exists('filter',$_POST) && is_array($_POST['filter'])) {
+            foreach($_POST['filter'] as $k => $v) {
+                $div_flt = $div_flt_cnt->add(tag::create('div'))->att("class","filter");
+                $div_flt->add(new hidden_box("filter[$k]"))->Att('value',$v);
+                switch($k[0]){
+                    case '!':
+                    case '€':
+                    case '$':
+                    case '#':
+                        $k = substr($k,1);
+                        break;
+                    case '_':
+                        list($a,$k) = explode(',',$k);
+                        break;
+                }
+                $div_flt->add("$k : $v");
             }
             $div->add($div_flt_cnt);
         } else {
@@ -212,7 +205,7 @@ class DataView extends ViewOpensymap
                 );
             });
         }
-        $div_flt_cnt->add(tag::create("div"))->att("style","clear: both");
+        $div_flt_cnt->add(new Tag("div"))->att("style","clear: both");
     }
     
     protected function buildTab()
@@ -233,6 +226,7 @@ class DataView extends ViewOpensymap
                 //$this->viewBody = new DataGrid('data-view');
                 $this->viewBody->att('filter_id',$rec[0]);
                 $this->viewBody->addFilter('_tab',$rec[0]);
+                $this->datasource->addFilter('_tab',$rec[0]);
                 $tab->put($rec[1],$this->viewBody,$i*10,10);
             } else {
                 $tab->put($rec[1],'<div  class="osy-maximize osy-tab-dummy" filter_id="'.$rec[0].'">Data loading.... Please wait</div>',$i*10,10);

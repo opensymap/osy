@@ -46,7 +46,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     private $__grp = array(); //array contenente i dati raggruppati
     private $__sta = array();
     private $db  = null;
-    private $ds  = null;
+    private $datasource = null;
     private $param_func = array();
 
     public function __construct($name)
@@ -88,7 +88,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         if ($this->get_par('form-related')) {
             //$this->setFormChild();
         }
-        if ($this->get_par('datasource-sql')) {
+        if ($this->get_par('datasource-sql') || $this->datasource) {
             $this->dataLoad();
         }
         if ($this->get_par('filter-show')) {
@@ -648,6 +648,22 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
 
     private function dataLoad()
     {
+        if ($this->datasource) {
+            $this->datasource->fill();
+            //Salvo le colonne in un option
+            $this->__par['cols'] = $this->datasource->getColumns();
+            $this->__par['cols_tot'] = count($this->__par['cols']);
+            $this->__par['cols_vis'] = 0;
+            if (is_array($this->__par['cols'])) {
+                $this->__par['cols_tot'] = count($this->__par['cols']);
+            }
+            $this->__par['pag_cur'] = $this->datasource->getPage('current');
+            $this->__par['pag_tot'] = $this->datasource->getPage('total');
+            //Scorro il recordset
+            $this->__dat = $this->datasource->get();
+            return;
+        }
+        
         //$sql = $this->replaceVariable($this->get_par('datasource-sql'));
         //$sql = $this->parseString($sql);
         $sql = $this->replacePlaceholder($this->get_par('datasource-sql'));
@@ -855,19 +871,8 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         $this->db = $db;
     }
     
-    public function setDatasource($ds)
+    public function setDatasource($datasource)
     {
-        $this->ds = $ds;
-        //var_dump($this->ds);
-        $this->ds->fill();
-        //Salvo le colonne in un option
-        $this->__par['cols'] = $this->ds->getColumns();
-        $this->__par['cols_tot'] = count($this->__par['cols']);
-        $this->__par['cols_vis'] = 0;
-        if (is_array($this->__par['cols'])) {
-            $this->__par['cols_tot'] = count($this->__par['cols']);
-        }
-        //Scorro il recordset
-        $this->__dat = $this->ds->get();
+        $this->datasource = $datasource;
     }
 }

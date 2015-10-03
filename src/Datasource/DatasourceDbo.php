@@ -42,11 +42,16 @@ class DatasourceDbo extends Datasource
                     FROM (
                         '.$sql.'
                     ) a ';
+        } else {
             $this->orderBy = false;
         }
+        
         if (!empty($this->where)) {
             foreach($this->where as $k => $filter) {
-                $where .= (empty($where) ? ''  : ' AND ') . "a.{$filter[0]} {$filter[1]['opr']} '".str_replace("'","''",$filter[1]['val'])."'";
+                $where .= empty($where) ? ''  : ' AND ';
+                //$where .= "a.{$filter[0]} {$filter[1]['opr']} '".str_replace("'","''",$filter[1]['val'])."'";
+                $where.= "a.".$filter[0]." ".$filter[1]['opr']." ? ";
+                $this->queryParams[] = $filter[1]['val'];
             }
             $sql .= " WHERE " .$where;
         }
@@ -60,39 +65,43 @@ class DatasourceDbo extends Datasource
         }
         
         if ($this->rowForPage > 0) {
-            $sql = $this->buildQueryPaging($sql,$orderby);
+            $sql = $this->buildQueryPaging($sql, $orderby);
         } else {
             if (strtolower(strtok($sql,' ')) == 'select') {
                 $sql .= $orderby;
             }
         }
-        //die ($sql);
-        //var_dump($this->page['current'],$this->rowTotal);
         $this->query = $sql;
     }
     
-    public function buildQueryPaging($sql,$orderby)
+    public function buildQueryPaging($sql, $orderby)
     {
         try {
             $this->rowTotal = $this->source->exec_unique(
                 "SELECT COUNT(*) 
-                FROM ({$sql}) a ".
-                $where
+                 FROM (
+                    {$sql}
+                ) a ",
+                $this->queryParams
             );
-            //$this->att('data-row-num',$this->rowTotal);
         } catch(Exception $e) {
             $this->error[] = $sqlCount."\n".$e->getMessage();
             return;
-        } finally {
-            $sql .= ' '.$orderby;
         }
         
+        $sql .= ' '.$orderby;
+        
+        //Compute total page (total rows / rows for page)
         $this->page['total'] = ceil($this->rowTotal / $this->rowForPage);
         
-        if (empty($this->page['current']) || $this->page['current'] > $this->page['total']) {
+        if (
+            empty($this->page['current']) || 
+            $this->page['current'] > $this->page['total']
+        ) {
             $this->page['current'] = $this->page['total'];
         } 
         
+        //Check if user send has send pagination command
         switch ($this->page['command']) {
             case '<<':
             case 'first':
@@ -123,13 +132,13 @@ class DatasourceDbo extends Datasource
                 $row_sta = (($this->page['current'] - 1) * $this->rowForPage) + 1 ;
                 $row_end = ($this->page['current'] * $this->rowForPage);
     
-                $sql = 'SELECT a.*
+                $sql = 'SELECT c.*
                         FROM (
                             SELECT b.*,rownum as "_rnum"
                             FROM ( 
                                 '.$sql.'
                             ) b
-                        ) a 
+                        ) c 
                         WHERE "_rnum" BETWEEN '.$row_sta.' AND '.$row_end;
                 break;
             case 'pgsql':
@@ -139,6 +148,8 @@ class DatasourceDbo extends Datasource
                 $sql .= ' LIMIT '.$row_sta.' , '.$this->rowForPage;
                 break;
         }
+        //mail('pietro.celeste@gmail.com', 'datagrid', print_r($sql,true));
+        return $sql;
     }
     
     public function getStatistics()
@@ -168,14 +179,36 @@ class DatasourceDbo extends Datasource
     {
         $this->buildQuery();
         try {
-            $rs = $this->source->query($this->query);
-            $this->columns = $this->source->get_columns($rs);
-            $this->recordsetRaw = $this->source->fetch_all($rs);
+            /*$rs = $this->source->query($this->query);
+            $this->columns = $this->source->get_columns();
+            $this->recordsetRaw = $this->source->fetch_all($rs);*/
+            $this->recordsetRaw = $this->source->exec_query(
+                $this->query,
+                $this->queryParams,
+                'ASSOC'
+            );
+            $this->columns = $this->source->get_columns();
         } catch (PDOException $e) {
             $this->recordsetRaw = array(
-                array($e->getMessage())
+                array($this->query.'<br>'.$e->getMessage())
             );
         }
+    }
+    
+    public function addFilter($field, $keySearch, $operator = '=')
+    {
+        if (empty($field) || empty($operator)) {
+            return false;
+        } 
+        $b = $this->source->backticks;
+        $this->where[] = array(
+            $b.$field.$b,
+            array(
+                'val'=>$keySearch,
+                'opr'=>$operator
+            )
+        );
+        return true;
     }
     
     public function orderBy($val)
@@ -183,24 +216,15 @@ class DatasourceDbo extends Datasource
         $this->orderBy = $val;
     }
 
-    public function setPage($current, $command = null)
+    public function setPage($current, $command = null, $rowForPage = 10)
     {
         $this->page['current'] = $current;
         $this->page['command'] = $command;
-     }
-
-    public function setPageCommand($command)
-    {
-        $this->page['command'] = $command;
+        $this->rowForPage  = $rowForPage;
     }
 
-    public function RowForPage($n)
+    public function getPage($key = 'current')
     {
-        $this->rowForPage = $n;
-    }
-
-    public function getTotalPage()
-    {
-        return $this->page['total'];
+        return $this->page[$key];
     }
 }
