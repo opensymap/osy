@@ -46,6 +46,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     private $__grp = array(); //array contenente i dati raggruppati
     private $__sta = array();
     private $db  = null;
+    private $ds  = null;
     private $param_func = array();
 
     public function __construct($name)
@@ -852,5 +853,21 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->ds = $ds;
+        //var_dump($this->ds);
+        $this->ds->fill();
+        //Salvo le colonne in un option
+        $this->__par['cols'] = $this->ds->getColumns();
+        $this->__par['cols_tot'] = count($this->__par['cols']);
+        $this->__par['cols_vis'] = 0;
+        if (is_array($this->__par['cols'])) {
+            $this->__par['cols_tot'] = count($this->__par['cols']);
+        }
+        //Scorro il recordset
+        $this->__dat = $this->ds->get();
     }
 }

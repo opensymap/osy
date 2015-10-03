@@ -58,4 +58,3 @@ class Listener
         return $this->repo['event'];
     }
 }
-

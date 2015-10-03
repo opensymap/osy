@@ -209,7 +209,7 @@ class Dbo extends \PDO
         if (empty($res)) {
             return null;
         }
-        return (count($res)== 1 && count($res[0])==1) ? $res[0][0] : $res[0];
+        return (count($res[0])==1) ? $res[0][0] : $res[0];
     }
     
     /**

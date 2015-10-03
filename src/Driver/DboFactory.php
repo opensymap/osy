@@ -11,8 +11,8 @@ class DboFactory
     public static function init()
     {
         $dbOsyParameters = "sqlite:".OSY_PATH_VAR."/osy-setup.sqlite3";
-        if (file_exists(__dir__.'/../etc/config.ini')) {
-            $dbOsyParameters = file_get_contents(__dir__.'/../etc/config.ini');
+        if (file_exists('../etc/config.ini')) {
+            $dbOsyParameters = file_get_contents('../etc/config.ini');
         }
         self::$dbo = self::connection($dbOsyParameters);
         return self::$dbo;

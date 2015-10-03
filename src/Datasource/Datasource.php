@@ -1,18 +1,43 @@
 <?php
-namespace Opensymap\Ocl\Datasource;
+namespace Opensymap\Datasource;
 
 abstract class Datasource 
 {
     protected $recordsetRaw;
     protected $recordsetRes;
     protected $source;
+    protected $trasformRow;
+    protected $trasformCol;
+    protected $columns;
     
     final public function __construct($source)
     {
-        $this->source($source)
+        $this->source = $source;
     }
     
     abstract function fill();
+    
+    //Return recordset
+    final public function get()
+    {
+        
+        if ($this->trasformRow) {
+            $this->recordsetRaw = array_map(
+                $this->trasformRow,
+                $this->recordsetRaw
+            );
+        }
+        return $this->recordsetRaw;
+    }
+    
+    public function getColumns()
+    {
+        if ($this->trasformCol) {
+            $fnc = $this->trasformCol;
+            return $fnc($this->columns);
+        }
+        return $this->columns;
+    }
     
     final public function getGrouped($fieldGrouped)
     {
@@ -28,6 +53,7 @@ abstract class Datasource
             } 
             $recordsetGrp[$groupId][] = $record;
         }
+        //var_dump($recordsetGrp);
         foreach ($recordsetRot as $rowNum => $record) {
             $record['__groupedLevel'] = 0;
             $this->recordsetRes[] = $record;
@@ -38,10 +64,10 @@ abstract class Datasource
     
     private function buildBranch($rowId, &$recordsetGrp, $level=0)
     {
-        if (array_key_exist($rowId,$recordsetGrp)) {
+        if (array_key_exists($rowId, $recordsetGrp)) {
             foreach ($recordsetGrp[$rowId] as $rowNum => $record) {
-                $this->recordsetRes[] = $record;
                 $record['__groupedLevel'] = $level+1;
+                $this->recordsetRes[] = $record;
                 $this->buildBranch($record['__groupedRowId'], $recordsetGrp, $level+1);
             }
         }
@@ -92,5 +118,15 @@ abstract class Datasource
         }
         $this->recordRes = $dataPivot;
         return $hcol;
+    }
+    
+    final public function trasformCol($fnc)
+    {
+        $this->trasformCol = $fnc;
+    }
+    
+    final public function trasformRow($fnc)
+    {
+        $this->trasformRow = $fnc;
     }
 }

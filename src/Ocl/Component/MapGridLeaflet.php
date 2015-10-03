@@ -27,11 +27,16 @@ use Opensymap\Osy as env;
 use Opensymap\Lib\Tag;
 use Opensymap\Ocl\Component\AbstractComponent;
 use Opensymap\Ocl\Component\HiddenBox;
+use Opensymap\Driver\DboAdapterInterface;
+use Opensymap\Driver\DboHelper;
 
-class MapGridLeaflet extends AbstractComponent
+class MapGridLeaflet extends AbstractComponent implements DboAdapterInterface
 {
+    use DboHelper;
+    
     private $map;
     private $cnt;
+    private $db;
     
     public function __construct($name)
     {
@@ -57,22 +62,37 @@ class MapGridLeaflet extends AbstractComponent
     public function build()
     {
         foreach ($this->getAtt() as $k => $v) {
-            if (is_numeric($k)) continue;
+            if (is_numeric($k)) {
+                continue;
+            }
             $this->map->att($k,$v,true);
         }
         if ($sql = $this->get_par('datasource-sql')) {
-            $sql = env::replacevariable($sql);
-            $res = env::$dba->exec_query($sql);
+            $sql = $this->replacePlaceholder($sql);
+            $res = $this->db->exec_unique($sql,null,'ASSOC');
         }
+        //var_dump($res);
         if (empty($res)) { 
-            $res = array(array('lat'=>41.9100711,'lng'=>12.5359979));   
+            $res = array(
+                'lat' => 41.9100711,
+                'lng' => 12.5359979,
+                'ico' => null
+            );
         }
-        $this->map->att('coostart',$res[0]['lat'].','.$res[0]['lng'].','.$res[0]['ico']);
+        $this->map->att(
+            'coostart',
+            $res['lat'].','.$res['lng'].','.$res['ico']
+        );
         if (empty($_REQUEST[$this->id.'_center'])) {
-            $_REQUEST[$this->id.'_center'] = $res[0]['lat'].','.$res[0]['lng'];
+            $_REQUEST[$this->id.'_center'] = $res['lat'].','.$res['lng'];
         }
         if ($grid = $this->get_par('datagrid-parent')) {
             $this->map->att('data-datagrid-parent',$grid);
         }
+    }
+    
+    public function setDboHandler($db)
+    {
+        $this->db = $db;
     }
 }
