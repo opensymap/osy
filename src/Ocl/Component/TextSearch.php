@@ -38,6 +38,7 @@ class TextSearch extends AbstractComponent implements DboAdapterInterface
     private $textBox = null;
     private $spanSrc = null;
     private $db;
+    private $datasource;
     
     public function __construct($name)
     {
@@ -75,5 +76,10 @@ class TextSearch extends AbstractComponent implements DboAdapterInterface
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource =$ds;
     }
 }

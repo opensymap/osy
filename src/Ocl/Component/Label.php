@@ -36,6 +36,7 @@ class Label extends AbstractComponent implements DboAdapterInterface
     use DboHelper;
     
     private $db;
+    private $datasource;
     
     public function __construct($name)
     {
@@ -98,5 +99,10 @@ class Label extends AbstractComponent implements DboAdapterInterface
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource =$ds;
     }
 }

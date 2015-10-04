@@ -4,6 +4,7 @@ namespace Opensymap\Ocl\Component;
 use Opensymap\Ocl\Component\DateBox;
 use Opensymap\Helper\HelperOsy;
 use Opensymap\Driver\DboAdapterInterface;
+use Opensymap\Datasource\DatasourceDbo;
 
 class ComponentFactory
 {
@@ -28,7 +29,8 @@ class ComponentFactory
         'onkeydown' => 'addJsEventListener',
         'form-related' => 'setFormRelated',
         'form-related-ins' => 'setFormRelated',
-        'form-related-search' => 'setFormRelated'
+        'form-related-search' => 'setFormRelated',
+        'datasource-sql' => 'setDatasourceDbo'
     );
     
     public static function init($state, $model)
@@ -180,6 +182,13 @@ class ComponentFactory
         $component->att('style',' '.$par.' : '.$val.';', true);
     }
     
+    private static function setDatasourceDbo($component, $par, $query)
+    {
+        $datasource = new DatasourceDbo(self::$model->dba);
+        $datasource->setQuery($query);
+        $component->setDatasource($datasource);
+    }
+    
     public function setFormRelated($component, $par, $val)
     {
         if (empty($par) || empty($val)) {
@@ -198,7 +207,15 @@ class ComponentFactory
                     prp.p_id                  AS pid,
                     prp.p_vl                  AS pval
              FROM  osy_obj frm
-             LEFT JOIN  osy_obj_prp prp ON (frm.o_id = prp.o_id AND prp.p_id IN ('height','width','db-field-is-pkey','db-field-connected' ))
+             LEFT JOIN  osy_obj_prp prp ON (
+                frm.o_id = prp.o_id AND 
+                prp.p_id IN (
+                    'height',
+                    'width',
+                    'db-field-is-pkey',
+                    'db-field-connected'
+                )
+             )
              WHERE frm.o_typ IN ('form','field') AND  frm.o_id LIKE ?",
              array($val.'%'), 
              'ASSOC'

@@ -34,6 +34,7 @@ use Opensymap\Ocl\Component\Panel;
 class RadioList extends Panel implements DboAdapterInterface
 {
     private $db;
+    private $datasource;
     
     public function __construct($name)
     {
@@ -80,5 +81,10 @@ class RadioList extends Panel implements DboAdapterInterface
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource =$ds;
     }
 }

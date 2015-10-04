@@ -40,21 +40,18 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     use DboHelper;
     
     private $__att = array();
-    private $__cmd = array();
     private $__col = array();
     private $__dat = array();
-    private $__grp = array(); //array contenente i dati raggruppati
     private $__sta = array();
     private $db  = null;
     private $datasource = null;
-    private $param_func = array();
 
     public function __construct($name)
     {
         parent::__construct('div',$name);
         //Add javascript manager;
         $this->addRequire('js/component/DataGrid.js');
-        $this->att('class','osy-datagrid-2');
+        $this->att('class', 'osy-datagrid-2');
         $this->__par['type'] = 'datagrid';
         $this->__par['row-num'] = 0;
         $this->__par['pkey'] = array();
@@ -76,7 +73,6 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     {
         $response = new \Opensymap\Response\PageHtmlResponse();
         $response->getBody()->add('<div>'.$this->get().'</div>');
-        //$response->message('datagrid',$this->id,'<div>'.$this->get().'<div>');
     }
     
     protected function build()
@@ -110,7 +106,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
              ->att('class','req-reinit');
         //Aggiungo il campo che conterrà il ramo selezionato.
         $this->add(new HiddenBox($this->id,$this->id.'_sel'))
-            ->att('class','req-reinit');
+             ->att('class','req-reinit');
         $this->buildAdd();
         $tbl_cnt = $this->add(tag::create('div'))
                         ->att('id',$this->id.'-body')
@@ -126,7 +122,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
             $tbl_cnt->att('style','height : '. $hgt . 'px',true);
         }
 
-        $tbl = $tbl_cnt->add(tag::create('table'));
+        $tbl = $tbl_cnt->add(new Tag('table'));
         if ($err = $this->get_par('error-in-sql')) {
             $tbl->add(tag::create('tr'))->add(tag::create('td'))->add($err);
             return;
@@ -140,7 +136,10 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
             $lev = ($this->get_par('type') == 'datagrid') ? null : 0;
             $this->buildBody($tbl_bod,$this->__dat,$lev);
         } else {
-            $tbl->add(tag::create('td'))->att('class','no-data')->att('colspan',$this->__par['cols_vis'])->add('Nessun dato presente');
+            $tbl->add(tag::create('td'))
+                ->att('class','no-data')
+                ->att('colspan',$this->__par['cols_vis'])
+                ->add('Nessun dato presente');
         }
         $t = array_sum($this->__sta['col_len']);
         foreach ($this->__sta['col_len'] as $k => $l) {
@@ -149,16 +148,20 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         }
         //Setto il tipo di componente come classe css in modo da poterlo testare via js.
         $this->att('class',$this->get_par('type'),true);
-
         $this->buildPaging();
-        //$this->add($html);
     }
 
     public function addFilter($field,$value,$operator='=')
     {
-        if (empty($field) || empty($operator)) return false;
+        if (empty($field) || empty($operator)) {
+            return false;
+        }
         $b = $this->db->backticks;
-        $this->__par['sql_filter'][] = array($b.$field.$b,array('val'=>$value,'opr'=>$operator));
+        $this->__par['sql_filter'][] = array(
+            $b.$field.$b,
+            array('val'=>$value,
+            'opr'=>$operator)
+        );
         return true;
     }
 
@@ -231,36 +234,34 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
 
     private function buildBody($container,$data,$lev,$ico_arr=null)
     {
-        if (!is_array($data)) return;
-        $i = 0;
-        $l = count($data);
+        if (!is_array($data)) {
+            return;
+        }        
         $ico_tre = null;
-
-        foreach($data as $k => $row) {
-            if (!is_null($lev)) {
-                if (($i+1) == $l) {
+        foreach($this->__dat as $k => $row) {
+            if (array_key_exists('__groupedLevel',$row) ) {
+                $lev = $row['__groupedLevel'];
+                $pos = $row['__groupedPos'];
+                if ($pos === 'last') {
                     $ico_tre = 3;
                     $ico_arr[$lev] = null;
-                } elseif(empty($i)) {
+                } elseif (empty($pos)) {
                     $ico_tre = empty($lev) ? 1 : 2;
-                    $ico_arr[$lev] = (($i+1) != $l) ? '4' : null;
+                    $ico_arr[$lev] = 4; //$pos != 'last' ? '4' : null;
                 } else {
                     $ico_tre = 2;
-                    $ico_arr[$lev] = (($i+1) != $l) ? '4' : null;
-                }
+                    $ico_arr[$lev] = 4; //$pos != 'last' ? '4' : null;
+                }                
             }
+            
             $this->buildRow($container, $row, $lev, $ico_tre, $ico_arr);
-            if ($this->get_par('type') == 'treegrid') {
-                @list($item_id,$group_id) = explode(',',$row['_tree']);
-                $this->buildBody($container,@$this->__grp[$item_id],$lev+1,$ico_arr);
-            }
             $i++;
         }
     }
-
+    
     private function buildHead($thead)
     {
-        $tr = tag::create('tr');
+        $tr = new Tag('tr');
         if ($this->get_par('layout') == 'search') {
             $tr->add(tag::create('th'))->add("&nbsp;");
         }
@@ -288,6 +289,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                         switch($v) {
                             case 'tree' :
                                 $this->att('class','osy-treegrid',true);
+                                
                                 $this->dataGroup();
                                 break;
                             case 'checkbox':
@@ -307,7 +309,10 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                         switch ($cmd) {
                             case '_tree':
                                 $this->att('class','osy-treegrid',true);
-                                $this->dataGroup();
+                                $this->par('type','treegrid');
+                                //$this->dataGroup();
+                                $this->__dat = $this->datasource->getGrouped('_tree');
+                                //var_dump($this->__dat);
                                 break;
                             case '_chk'   :
                             case '_chk2'  :
@@ -320,7 +325,8 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                                 $opt['print'] = true;
                                 break;
                             case '_pivot' :
-                                $this->dataPivot($tr);
+                                //$this->dataPivot($tr);
+                                $this->__dat = $this->datasource->getGrouping();
                                 $thead->add($tr);
                                 return;
                                 break;
@@ -447,7 +453,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                 $opt['cell']['format'] = 'center';
             }
             if (!empty($opt['cell']['format'])) {
-                list($opt,$lev,$pos,$ico_arr) = $this->formatCellValue($opt, $pk, $lev, $pos, $ico_arr);
+                list($opt,$lev,$pos,$ico_arr) = $this->formatCellValue($row, $opt, $pk, $lev, $pos, $ico_arr);
                 //var_dump($opt['row']);
             }
             $t++; //Incremento l'indice generale della colonna
@@ -525,7 +531,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         $this->att('class','osy-update-row',true);
     }
 
-    private function formatCellValue($opt, $pk, $lev, $pos, $ico_arr=null)
+    private function formatCellValue($row, $opt, $pk, $lev, $pos, $ico_arr=null)
     {
         $opt['cell']['print'] = false;
         switch($opt['cell']['format']) {
@@ -591,19 +597,22 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                 if (array_key_exists($this->id,$_REQUEST) && $_REQUEST[$this->id] == '['.$tree_id.']'){
                     $opt['row']['class'][] = 'sel';
                 }
-                if (empty($pk)) { $pk = $tree_id; }
-                if (!is_null($lev)){
+                if (empty($pk)) { 
+                    $pk = $tree_id; 
+                }
+                if (!is_null($lev)) {
                     $ico = '';
-                    for($ii = 0; $ii < $lev; $ii++)
-                    {
+                    for($ii = 0; $ii < $lev; $ii++) {
                         $cls  = empty($ico_arr[$ii]) ? 'tree-null' : ' tree-con-'.$ico_arr[$ii];
                         $ico .= '<span class="tree '.$cls.'">&nbsp;</span>';
                     }
-                    $ico .= array_key_exists($tree_id,$this->__grp)
+                    $ico .= $row['__groupedType'] == 'branch'
                            ? '<span class="tree tree-plus-'.$pos.'">&nbsp;</span>'
                            : '<span class="tree tree-con-'.$pos.'">&nbsp;</span>';
                     $opt['row']['prefix'][] = $ico;
-                    if (!empty($lev)){   $opt['row']['class'][] = 'hide';  }
+                    if (!empty($lev)){
+                        $opt['row']['class'][] = 'hide';
+                    }
                 }
                 break;
             case '_form' :
@@ -663,141 +672,8 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
             $this->__dat = $this->datasource->get();
             return;
         }
-        
-        //$sql = $this->replaceVariable($this->get_par('datasource-sql'));
-        //$sql = $this->parseString($sql);
-        $sql = $this->replacePlaceholder($this->get_par('datasource-sql'));
-        if (empty($sql)) {
-            return;
-        }
-        $whr = '';
-
-        if (!empty($this->__par['sql_filter'])) {
-            foreach($this->__par['sql_filter'] as $k => $flt) {
-                $whr .= (empty($whr) ? ''  : ' AND ') . "a.{$flt[0]} {$flt[1]['opr']} '".str_replace("'","''",$flt[1]['val'])."'";
-            }
-            $whr = " WHERE " .$whr;
-        }
-        try {
-            $sql_cnt = "SELECT COUNT(*) FROM ({$sql}) a ".$whr;
-            $this->__par['rec_num'] = $this->db->exec_unique($sql_cnt);
-            $this->att('data-row-num',$this->__par['rec_num']);
-        } catch(Exception $e) {
-            $this->par('error-in-sql','<pre>'.$sql_cnt."\n".$e->getMessage().'</pre>');
-            return;
-        }
-        if ($this->__par['row-num'] > 0) {
-            $this->__par['pag_tot'] = ceil($this->__par['rec_num'] / $this->__par['row-num']);
-            $this->__par['pag_cur'] = !empty($_REQUEST[$this->id.'_pag']) ? min($_REQUEST[$this->id.'_pag'],$this->__par['pag_tot']) : $this->__par['pag_tot'];
-            if (!empty($_REQUEST['btn_pag'])) {
-                switch($_REQUEST['btn_pag']) {
-                    case '<<' :
-                        $this->__par['pag_cur'] = 1;
-                        break;
-                    case '<'  :
-                        if ($this->__par['pag_cur'] > 1){
-                            $this->__par['pag_cur']--;
-                        }
-                        break;
-                    case '>'  :
-                        if ($this->__par['pag_cur'] < $this->__par['pag_tot']) {
-                            $this->__par['pag_cur']++;
-                        }
-                        break;
-                    case '>>' :
-                        $this->__par['pag_cur'] = $this->__par['pag_tot'];
-                        break;
-                }
-            }
-        }
-        //Calcolo statistiche
-        if ($sql_stat = $this->get_par('datasource-sql-stat')) {
-            try {
-                $sql_stat = $this->replacePlaceholder(str_replace('<[datasource-sql]>',$sql,$sql_stat).$whr);
-                $stat = $this->db->exec_unique($sql_stat,null,'ASSOC');
-                if (!is_array($stat)) $stat = array($stat);
-                $dstat = tag::create('div')->att('class',"osy-datagrid-stat");
-                $tr = $dstat->add(tag::create('table'))->att('align','right')->add(tag::create('tr'));
-                foreach($stat as $k=>$v) {
-                    $v = ($v>1000) ? number_format($v,2,',','.') : $v;
-                    $tr->add(tag::create('td'))->add('&nbsp;');
-                    $tr->add(tag::create('td'))->att('title',$k)->add($k);
-                    $tr->add(tag::create('td'))->add($v);
-                }
-                $this->__par['div-stat'] = $dstat;
-            } catch(Exception $e) {
-                $this->par('error-in-sql-stat','<pre>'.$sql_stat."\n".$e->getMessage().'</pre>');
-            }
-        }
-
-        switch($this->db->get_type()) {
-            case 'oracle':
-                $sql = "SELECT a.*
-                        FROM (
-                                 SELECT b.*,rownum as \"_rnum\"
-                                  FROM (
-                                         SELECT a.*
-                                         FROM ($sql) a
-                                         ".(empty($whr) ? '' : $whr)."
-                                         ".(!empty($_REQUEST[$this->id.'_order']) ? ' ORDER BY '.str_replace(array('][','[',']'),array(',','',''),$_REQUEST[$this->id.'_order']) : ' ORDER BY 1')."
-                                        ) b
-                            ) a ";
-                if (!empty($this->__par['row-num']) && array_key_exists('pag_cur',$this->__par)) {
-                    $row_sta = (($this->__par['pag_cur'] - 1) * $this->__par['row-num']) + 1 ;
-                    $row_end = ($this->__par['pag_cur'] * $this->__par['row-num']);
-                    $sql .=  "WHERE \"_rnum\" BETWEEN $row_sta AND $row_end";
-                }
-                break;
-            default :
-                $sql = "SELECT a.* FROM ({$sql}) a {$whr} ";
-
-                if (!empty($_REQUEST[$this->id.'_order'])) {
-                    $sql .= ' ORDER BY '.str_replace(array('][','[',']'),array(',','',''),$_REQUEST[$this->id.'_order']);
-                }
-
-                if (!empty($this->__par['row-num']) && array_key_exists('pag_cur',$this->__par)) {
-                    $row_sta = (($this->__par['pag_cur'] - 1) * $this->__par['row-num']);
-                    $row_sta =  $row_sta < 0 ? 0 : $row_sta;
-                    $sql .= ($this->db->get_type() == 'pgsql')
-                           ? "\nLIMIT ".$this->get_par('row-num')." OFFSET ".$row_sta
-                           : "\nLIMIT $row_sta , ".$this->get_par('row-num');
-                }
-                break;
-        }
-        //Eseguo la query
-        //env::mail_debug($sql,false);
-        //var_dump($sql);
-        //return;
-        $rs = $this->db->query($sql);
-
-        //Salvo le colonne in un option
-        $this->__par['cols'] = $this->db->get_columns($rs);
-        $this->__par['cols_tot'] = count($this->__par['cols']);
-        $this->__par['cols_vis'] = 0;
-        if (is_array($this->__par['cols'])) {
-            $this->__par['cols_tot'] = count($this->__par['cols']);
-        }
-        //Scorro il recordset
-        $this->__dat = $this->db->fetch_all($rs);
-
-        //Libero memoria annullando il recordset
-        $this->db->free_rs($rs);
     }
 
-    private function dataGroup()
-    {
-        $this->par('type','treegrid');
-        $dat = [];
-        foreach ($this->__dat as $k => $v) {
-            @list($oid,$gid) = explode(',',$v['_tree']);
-            if (!empty($gid)) {
-                $this->__grp[$gid][] = $v;
-            } else {
-                $dat[] = $v;
-            }
-        }
-        $this->__dat = $dat;
-    }
 
     private function dataPivot($tr)
     {
@@ -874,5 +750,15 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     public function setDatasource($datasource)
     {
         $this->datasource = $datasource;
+        //Set current page, page command, Row for page
+        $this->datasource->setPage(
+            $_REQUEST[$this->id.'_pag'],
+            $_REQUEST['btn_pag'],
+            $this->rows
+        );
+        //Set order by field
+        $this->datasource->orderBy(
+            $_REQUEST[$this->id.'_order']
+        );
     }
 }

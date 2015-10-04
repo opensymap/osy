@@ -35,6 +35,7 @@ class CheckList extends AbstractComponent implements DboAdapterInterface
 
     private $table = null;
     private $db;
+    private $datasource;
    
     public function __construct($name)
     {
@@ -72,5 +73,10 @@ class CheckList extends AbstractComponent implements DboAdapterInterface
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource = $ds;
     }
 }

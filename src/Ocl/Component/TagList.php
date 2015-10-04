@@ -32,6 +32,7 @@ use Opensymap\Ocl\AjaxInterface;
 class TagList extends AbstractComponent implements DboAdapterInterface, AjaxInterface
 {
     private $db;
+    private $datasource;
     
     public function __construct($id = null)
     {
@@ -137,5 +138,10 @@ class TagList extends AbstractComponent implements DboAdapterInterface, AjaxInte
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource =$ds;
     }
 }

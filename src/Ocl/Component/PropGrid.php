@@ -35,6 +35,7 @@ class PropGrid extends AbstractComponent implements DboAdapterInterface, AjaxInt
     
     protected $data = array();
     private $db;
+    private $datasource;
     
     public function __construct($name)
     {
@@ -104,5 +105,10 @@ class PropGrid extends AbstractComponent implements DboAdapterInterface, AjaxInt
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($datasource)
+    {
+        $this->datasource = $datasource;
     }
 }

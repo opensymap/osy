@@ -33,6 +33,7 @@ class VariableBox extends AbstractComponent implements DboAdapterInterface
     use DboHelper;
     
     private $db;
+    private $datasource;
     private $mapComponentMethod = array(
         'CMB' => 'buildComboBox',
         'TAR' => 'buildTextArea',
@@ -88,5 +89,10 @@ class VariableBox extends AbstractComponent implements DboAdapterInterface
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($datasource)
+    {
+        $this->datasource = $datasource;
     }
 }

@@ -37,6 +37,7 @@ class ComboBox extends AbstractComponent implements DboAdapterInterface
     public $__grp = array();
     private $db;
     private $value;
+    private $datasource;
     
     public function __construct($nam,$id=null)
     {
@@ -141,5 +142,10 @@ class ComboBox extends AbstractComponent implements DboAdapterInterface
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource =$ds;
     }
 }

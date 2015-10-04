@@ -76,28 +76,18 @@ class DataView extends ViewOpensymap
         $this->datasource->setQuery(
             $this->getParam('sql-query')
         );
-        //Set current page, page command, Row for page
-        $this->datasource->setPage(
-            $_REQUEST['data-view_pag'],
-            $_REQUEST['btn_pag'], 
-            $this->getParam('row-num')
-        );
-        //Set order by field
-        $this->datasource->orderBy(
-            $_REQUEST['data-view_order']
-        );
+        
         if (!$this->buildTab()) {
             $this->form->put($this->viewBody,'','',100,10); 
             if (!empty($_REQUEST['osy']) && !empty($_REQUEST['osy']['layout'])) {
                 $this->viewBody->par('layout',$_REQUEST['osy']['layout']);
             }
         }
-        
+        $this->viewBody->att('rows', $this->getParam('row-num'));
         $this->viewBody->setDatasource($this->datasource);
         
         if (!empty($_POST['filter'])) {
             foreach($_POST['filter'] as $field => $value) {
-                //$this->viewBody->addFilter($field,'%'.str_replace("'","''",$value).'%','like');
                 $this->datasource->addFilter($field, '%'.str_replace("'","''",$value).'%', 'like');
             }
         }
@@ -229,7 +219,7 @@ class DataView extends ViewOpensymap
                 $this->datasource->addFilter('_tab',$rec[0]);
                 $tab->put($rec[1],$this->viewBody,$i*10,10);
             } else {
-                $tab->put($rec[1],'<div  class="osy-maximize osy-tab-dummy" filter_id="'.$rec[0].'">Data loading.... Please wait</div>',$i*10,10);
+                $tab->put($rec[1],'<div class="osy-tab-dummy" filter_id="'.$rec[0].'">Data loading.... Please wait</div>',$i*10,10);
             }
         }
         $this->form->put($tab,'','',100,10);

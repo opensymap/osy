@@ -21,7 +21,7 @@ class DatasourceDbo extends Datasource
         'command' => null
     );
 
-    public function setQuery($query, $params=array(), $fetchMethod='ASSOC')
+    public function setQuery($query,array $params=array(), $fetchMethod='ASSOC')
     {
         $this->query = $query;
         $this->queryParams = $params;
@@ -101,7 +101,7 @@ class DatasourceDbo extends Datasource
             $this->page['current'] = $this->page['total'];
         } 
         
-        //Check if user send has send pagination command
+        //Check if user has send pagination command
         switch ($this->page['command']) {
             case '<<':
             case 'first':
@@ -148,7 +148,7 @@ class DatasourceDbo extends Datasource
                 $sql .= ' LIMIT '.$row_sta.' , '.$this->rowForPage;
                 break;
         }
-        //mail('pietro.celeste@gmail.com', 'datagrid', print_r($sql,true));
+        
         return $sql;
     }
     

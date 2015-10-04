@@ -34,6 +34,7 @@ class MultiBox extends AbstractComponent implements DboAdapterInterface
     use DboHelper;
     
     private $db;
+    private $datasource;
     
     public function __construct($nam, $id=null)
     {
@@ -110,5 +111,10 @@ class MultiBox extends AbstractComponent implements DboAdapterInterface
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($datasource)
+    {
+        $this->datasource = $datasource;
     }
 }

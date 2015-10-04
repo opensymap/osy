@@ -41,36 +41,50 @@ abstract class Datasource
     
     final public function getGrouped($fieldGrouped)
     {
-        $recordsetRot = []; //Recordset root
-        $recordsetGrp = []; //Recordset dei gruppi
+        $recordsetRoot = []; //Recordset root
+        $recordsetGroup = []; //Recordset dei gruppi
         foreach ($this->recordsetRaw as $rowNum => $record) {
             @list($recordId, $groupId) = explode(',',$record[$fieldGrouped]);
             $record['__groupedRowId'] = trim($recordId);
             $record['__groupedGrpId'] = trim($groupId);
             if (empty($groupId)) {
-                $recordsetRot[] = $record;
+                $recordsetRoot[] = $record;
                 continue;
             } 
-            $recordsetGrp[$groupId][] = $record;
+            $recordsetGroup[$groupId][] = $record;
         }
-        //var_dump($recordsetGrp);
-        foreach ($recordsetRot as $rowNum => $record) {
+        //var_dump($recordsetGroup);
+        foreach ($recordsetRoot as $rowNum => $record) {
+            $i = count($this->recordsetRes);
             $record['__groupedLevel'] = 0;
             $this->recordsetRes[] = $record;
-            $this->buildBranch($record['__groupedRowId'], $recordsetGrp);
+            $this->recordsetRes[$i]['__groupedType'] = $this->buildBranch($record['__groupedRowId'], $recordsetGroup);
+            $this->recordsetRes[$i]['__groupedPos'] = $rowNum;
         }
+        if (!empty($i)) {
+            $this->recordsetRes[$i]['__groupedPos'] = 'last';
+        }
+        
         return $this->recordsetRes;
     }
     
-    private function buildBranch($rowId, &$recordsetGrp, $level=0)
+    private function buildBranch($rowId, &$recordsetGroup, $level=0)
     {
-        if (array_key_exists($rowId, $recordsetGrp)) {
-            foreach ($recordsetGrp[$rowId] as $rowNum => $record) {
+        if (array_key_exists($rowId, $recordsetGroup)) {
+            foreach ($recordsetGroup[$rowId] as $rowNum => $record) {
+                $i = count($this->recordsetRes);
+                $record['__groupedPos'] = '';
                 $record['__groupedLevel'] = $level+1;
                 $this->recordsetRes[] = $record;
-                $this->buildBranch($record['__groupedRowId'], $recordsetGrp, $level+1);
+                $this->recordsetRes[$i]['__groupedType'] = $this->buildBranch($record['__groupedRowId'], $recordsetGroup, $level+1);
+                $this->recordsetRes[$i]['__groupedPos'] = $rowNum;
             }
+            if (!empty($i)) {
+                 $this->recordsetRes[$i]['__groupedPos'] = 'last';
+            }
+            return 'branch';
         }
+        return 'leaf';
     }
     
     final public function getPivot($pivotField = '_pivot')
