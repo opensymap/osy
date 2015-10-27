@@ -36,7 +36,8 @@ class HtmlArea extends AbstractComponent
     {
         parent::__construct('div',$name);
         $this->att('class','osy-htmlarea');
-        $this->addRequire('js/component/HtmlArea.js');
+        $this->addRequire('Ocl/Component/HtmlArea/style.css');
+        $this->addRequire('Ocl/Component/HtmlArea/controller.js');
         
         $toolbar = <<<TOOLBAR
 <div id="edit-bar">

@@ -42,7 +42,7 @@ class Button extends AbstractComponent
     {
         $this->add('<span>'.$this->label.'</span>');
         
-        if ($formId = $this->get_par('form-related')) {
+        if ($formId = $this->getParameter('form-related')) {
             /*$formPar = (array_key_exists('rel_fields',$this->__par)) ? explode(',',$this->__par['rel_fields']) : array();
             $strPar = array();
             foreach($formPar as $field) { 
@@ -50,7 +50,7 @@ class Button extends AbstractComponent
             }*/
             
             $this->att('onclick', "oform.command.open_window64(this,'form-related')");
-            if ($var = $this->get_par('variables-child-post')) {
+            if ($var = $this->getParameter('variables-child-post')) {
                  $this->att('variables-child-post',$var);
             }
         }

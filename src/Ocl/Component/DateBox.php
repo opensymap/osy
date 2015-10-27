@@ -42,7 +42,7 @@ class DateBox extends AbstractComponent
                                 ->att('size',8)
                                 ->att('maxlength',12);
         $this->add('<span class="fa fa-calendar"></span>');
-        $this->addRequire('js/component/DateBox.js');
+        $this->addRequire('Ocl/Component/DateBox/controller.js');
     }
     
     protected function build()
@@ -51,7 +51,7 @@ class DateBox extends AbstractComponent
         if (!empty($val)) {  
             $_REQUEST[$this->id] = $val; 
         }
-        if (!empty($_REQUEST[$this->id]) && $this->get_par('date-format')) {
+        if (!empty($_REQUEST[$this->id]) && $this->getParameter('date-format')) {
             if (strlen($_REQUEST[$this->id]) > 10) {
                 list($data,$ora) = explode(' ',$_REQUEST[$this->id]);
                 $adat = explode('-', $data);
@@ -59,7 +59,7 @@ class DateBox extends AbstractComponent
                 $adat = explode('-', $_REQUEST[$this->id]);
             }
             if (count($adat) == 3) {
-               $_REQUEST[$this->id] = str_replace(array('yyyy','mm','dd'), $adat, $this->get_par('date-format'));
+               $_REQUEST[$this->id] = str_replace(array('yyyy','mm','dd'), $adat, $this->getParameter('date-format'));
             }
         }
         $this->dateField->att('value',$_REQUEST[$this->id]);

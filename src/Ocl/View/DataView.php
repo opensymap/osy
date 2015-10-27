@@ -29,10 +29,11 @@ class DataView extends ViewOpensymap
         $this->response->addCss('/vendor/font-awesome-4.2.0/css/font-awesome.min.css');
         $this->response->addCss('/vendor/jquery/smoothness/jquery-ui-1.9.1.custom.css');
         $this->response->addCss('css/style.css');
+        $this->response->addCss('Ocl/View/DataView/style.css');
         $this->response->addJsFile('/vendor/jquery/jquery-1.10.2.min.js');
         $this->response->addJsFile('/vendor/jquery/jquery-ui-1.10.3.custom.min.js');
-        $this->response->addJsFile('js/view/Form.js'); 
-        $this->response->addJsFile('js/view/Dataview.js'); 
+        $this->response->addJsFile('Ocl/View/View/FormController.js'); 
+        $this->response->addJsFile('Ocl/View/DataView/controller.js'); 
     }
     
     protected function build()
@@ -213,9 +214,7 @@ class DataView extends ViewOpensymap
             if ((empty($_REQUEST['osy']['tid']) && empty($i)) || $_REQUEST['osy']['tid'] == $rec[0]) {
                 $tab->att('tabsel',$i);
                 $hdn->value = $_REQUEST['osy']['tid'] = $rec[0];
-                //$this->viewBody = new DataGrid('data-view');
                 $this->viewBody->att('filter_id',$rec[0]);
-                $this->viewBody->addFilter('_tab',$rec[0]);
                 $this->datasource->addFilter('_tab',$rec[0]);
                 $tab->put($rec[1],$this->viewBody,$i*10,10);
             } else {

@@ -37,6 +37,7 @@ class TextSearchInLine extends AbstractComponent implements DboAdapterInterface,
     private $textBox = null;
     private $spanSrc = null;
     private $db;
+    private $datasource;
     
     public function __construct($name)
     {
@@ -47,15 +48,16 @@ class TextSearchInLine extends AbstractComponent implements DboAdapterInterface,
         $this->textBox = $this->add(tag::create('input'))
                               ->att('type','text')
                               ->att('name',$name.'_lbl');
-        $this->spanSrc = $this->add(tag::create('span'))->att('class','fa fa-search');
-        $this->addRequire('css/TextSearchInLine.css');
-        $this->addRequire('js/component/TextSearchInLine.js');
+        $this->spanSrc = $this->add(new Tag('span'))
+                              ->att('class','fa fa-search');
+        $this->addRequire('Ocl/Component/TextSearchInLine/style.css');
+        $this->addRequire('Ocl/Component/TextSearchInLine/controller.js');
     }
     
     public function build()
     {
         $form_pkey = array();       
-        if ($form = $this->get_par('form-related')) {
+        if ($form = $this->getParameter('form-related')) {
             $form_pkey = $form_par['pkey'];
             $str_par = "obj_src=".$this->id;
             $frm_par = (key_exists('rel_fields',$this->__par)) ? explode(',',$this->__par['rel_fields']) : array();            
@@ -75,7 +77,7 @@ class TextSearchInLine extends AbstractComponent implements DboAdapterInterface,
         if ($_REQUEST['ajax'] == $this->id) {
             $this->ajaxResp($form_pkey);
             return;
-        } elseif (!empty($_REQUEST[$this->id]) && ($sql = $this->get_par('datasource-sql-label'))) {            
+        } elseif (!empty($_REQUEST[$this->id]) && ($sql = $this->getParameter('datasource-sql-label'))) {            
             $sql = env::replaceVariable($sql);          
             $this->textBox->value = env::$dba->exec_unique($sql,null,'NUM');            
         }
@@ -91,12 +93,12 @@ class TextSearchInLine extends AbstractComponent implements DboAdapterInterface,
     public function buildAjax() 
     {
         $form_pkey = array();
-        if ($form = $this->get_par('form-related')) {
+        if ($form = $this->getParameter('form-related')) {
             $form_par = $this->getFormParam($form,true);          
             $form_pkey = $form_par['pkey'];
         }
         $tbl = new Tag('div');          
-        $sql = $this->replacePlaceholder($this->get_par('datasource-sql'));
+        $sql = $this->replacePlaceholder($this->getParameter('datasource-sql'));
         $rs  = $this->db->exec_query("SELECT * FROM (".$sql.") a",null,'ASSOC');
         $cols = $this->db->get_columns();
         foreach($cols as $col) {
@@ -187,5 +189,10 @@ class TextSearchInLine extends AbstractComponent implements DboAdapterInterface,
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource = $ds;
     }
 }

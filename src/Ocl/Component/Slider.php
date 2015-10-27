@@ -37,20 +37,20 @@ class Slider extends AbstractComponent
     {
         parent::__construct('div',$id);
         $this->att('class','osy-slider');
-        //env::$page->add_script(OSY_WEB_ROOT.'/js/component/Slider.js');
-        $this->addRequire('js/component/Slider.js');
+        $this->addRequire('Ocl/Component/Slider/style.css');
+        $this->addRequire('Ocl/Component/Slider/controller.js');
     }
 
     protected function build()
     {
-        if ($range = $this->get_par('slider-range')) {
+        if ($range = $this->getParameter('slider-range')) {
             $this->att('data-range',$range);
             $this->add(new HiddenBox($this->id.'_min'));
             $this->add(new HiddenBox($this->id.'_max'));
         } else {
             $this->add(new HiddenBox($this->id));
         }
-        $min = $this->get_par('min');
+        $min = $this->getParameter('min');
         $div_min_max = $this->add(tag::create('div'));
         $div_min_max->att('class','osy-slider-min-max');
         $div_min_max->add('&nbsp');
@@ -60,7 +60,7 @@ class Slider extends AbstractComponent
             $this->att('data-min',$min);
         }
         $bar = $this->add(tag::create('div'))->att('class','osy-slider-bar');
-        if ($max = $this->get_par('max')){
+        if ($max = $this->getParameter('max')){
             if ($max[0] == '$'){ eval('$max = '.$max.';'); }
             $div_min_max->add('<span class="lbl-max">'.$max.'</span>');
             $this->att('data-max',$max);
@@ -71,7 +71,7 @@ class Slider extends AbstractComponent
         }
         $this->add('<script>
         oslider.onevent("onstop","'.$this->id.'",function(event,ui){
-        '.$this->get_par('onstop').'
+        '.$this->getParameter('onstop').'
         });
         </script>');
         //$this->add('<span class="osy-slider-result"></span>');

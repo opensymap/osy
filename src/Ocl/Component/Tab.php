@@ -51,11 +51,11 @@ class Tab extends AbstractComponent
             ksort($row);
             foreach ($row as $cols) {
                 foreach ($cols as $obj) {
-                    $prefix = is_object($obj['obj']) ? $obj['obj']->get_par('label-prefix').' ' : '';
+                    $prefix = is_object($obj['obj']) ? $obj['obj']->getParameter('label-prefix').' ' : '';
                     $head->add('<li><a href="#'.$this->id.'_'.$it.'" idx="'.$it.'"><p><span>'.$prefix.$obj['lbl']."</span></p></a></li>\n");
                     $div = $this->add(tag::create('div'))->att('id',$this->id.'_'.$it);
-                    if ($this->get_par('cell-height')) {
-                        $h = intval($this->get_par('cell-height'));
+                    if ($this->getParameter('cell-height')) {
+                        $h = intval($this->getParameter('cell-height'));
                         $obj['obj']->att('style','height : '.($h-30).'px');
                     }
                     $div->add($obj['obj']);

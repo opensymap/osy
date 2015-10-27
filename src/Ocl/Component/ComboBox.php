@@ -24,18 +24,11 @@
 namespace Opensymap\Ocl\Component;
 
 use Opensymap\Lib\Tag as tag;
-use Opensymap\Driver\DboAdapterInterface;
-use Opensymap\Driver\DboHelper;
 use Opensymap\Ocl\Component\AbstractComponent;
 
 //costruttore del combo box
-class ComboBox extends AbstractComponent implements DboAdapterInterface
+class ComboBox extends AbstractComponent 
 {
-    use DboHelper;
-    
-    public $__dat = array();
-    public $__grp = array();
-    private $db;
     private $value;
     private $datasource;
     
@@ -45,107 +38,56 @@ class ComboBox extends AbstractComponent implements DboAdapterInterface
         $this->att('name',$nam);
     }
 
-    public function addOption($value, $label)
-    {
-        $cmp_val = get_global($this->name, $_REQUEST);
-        $opt = $this->add(new Tag('option'))
-                    ->att('value',$value);
-        $opt->add(nvl($label, $value));
-        if ($cmp_val == $value) {
-            $opt->att('selected','selected');
-        }
-    }
-
     protected function build()
     {
-        if ($dsr = $this->get_par('datasource')) {
-            $this->__dat = $dsr;
-        } elseif ($sql = $this->get_par('datasource-sql')) {
-            $sql = $this->replacePlaceholder($sql, $this->getRequest('input'));
-            try {
-                $this->__dat = $this->db->exec_query($sql,NULL,'BOTH');
-            } catch(Exception $e) {
-                $this->att(0,'dummy');
-                $this->add('<div class="osy-error" id="'.$this->id.'">SQL ERROR - [LABEL]</div>');
-                $this->add('<div class="osy-error-msg">'.($e->getMessage()).'<br>'.nl2br($sql).'</div>');
-                return;
-            }
-        }
-        if (!empty($this->__dat) && array_key_exists('_group',$this->__dat[0])) {
-            if (!$this->get_par('option-select-disable')) {
-                array_unshift($this->__dat, array('','- select -','_group'=>''));
-            }
-            $this->buildTree($this->__dat);
-            return;
+        $dataset = array();
+        
+        if (!empty($this->datasource)) {
+            $dataset = is_array($this->datasource) ? 
+                $this->datasource : 
+                $this->datasource->get();
+        } elseif ($dsr = $this->getParameter('datasource')) {
+            $dataset = $dsr;
         } 
-        if (!$this->get_par('option-select-disable')) {
-            if (!($lbl = $this->get_par('label-inside'))) {
+       
+        if (!$this->getParameter('option-select-disable')) {
+            if (!($lbl = $this->getParameter('label-inside'))) {
                 $lbl = '- select -';
             }
-            array_unshift($this->__dat, array('',$lbl));
+            array_unshift($dataset, array('',$lbl));
         }
-        $val = get_global($this->name,$_REQUEST);
+        
+        $value = get_global($this->name, $_REQUEST);
+        
         $idx = array(0,1);
-        if ($this->get_par('fields-order')) {
-            $idx = explode(',',$this->get_par('fields-order'));
+        
+        if ($this->getParameter('fields-order')) {
+            $idx = explode(',',$this->getParameter('fields-order'));
         }
-        foreach ($this->__dat as $k => $itm) {
-            $sel = ($val == $itm[$idx[0]]) ? ' selected' : '';
-            $opt = $this->add(Tag::create('option'))->att('value',$itm[$idx[0]]);
-            $opt->add(nvl($itm[$idx[1]], $itm[$idx[0]]));
-            if ($val == $itm[$idx[0]]) {
-                $opt->att('selected','selected');
+        
+        foreach ($dataset as $k => $item) {
+            //If is a tree combo datasource pass element's level
+            $level = empty($item['__groupedLevel']) ? 0 : $item['__groupedLevel'];
+            $item = array_values($item);
+            if ($item[0] === false) {
+                continue;
+            }
+            $sel = ($value == $item[$idx[0]]) ? ' selected' : '';
+            $option = $this->add(new Tag('option'))
+                           ->att('value',$item[$idx[0]]);
+            $label = nvl($item[$idx[1]], $item[$idx[0]]);
+            if ($level > 0) {
+                $label = str_repeat('&nbsp;', $level * 4) . $label;
+            }
+            $option->add($label);
+            if ($value == $item[$idx[0]]) {
+                $option->att('selected','selected');
             }
         }
     }
 
-    private function buildTree($recordSet)
+    public function setDatasource($datasource)
     {
-        $dat = array();
-        foreach($recordSet as $k => $rec) {
-            if (empty($rec['_group'])) {
-                $dat[] = $rec;
-            } else {
-                $this->__grp[$rec['_group']][] = $rec;
-            }
-        }
-        $this->buildBranch($dat);
-    }
-
-    private function buildBranch($dat,$lev=0)
-    {
-        if (empty($dat)) return;
-        $len = count($dat)-1;
-        $cur_val = get_global($this->name,$_REQUEST);
-        foreach($dat as $k => $rec) {
-            $val = array();
-            foreach($rec as $j => $v) {
-                if (!is_numeric($j)) continue;
-                if (count($val) == 2) continue;
-                $sta = (empty($lev)) ? '' : '|';
-                $end = $len == $k    ? "\\" : "|";
-                $val[] = empty($val) ? $v : str_repeat('&nbsp;',$lev*5).$v;
-            }
-            $sel = ($cur_val == $val[0]) ? ' selected' : '';
-            $opt = $this->add(tag::create('option'))
-                        ->att('value',$val[0]);
-            $opt->add(nvl($val[1],$val[0]));
-            if ($cur_val == $val[0]) {
-                $opt->att('selected','selected');
-            }
-            if (array_key_exists($val[0],$this->__grp)) {
-                $this->buildBranch($this->__grp[$val[0]],$lev+1);
-            }
-        }
-    }
-    
-    public function setDboHandler($db)
-    {
-        $this->db = $db;
-    }
-    
-    public function setDatasource($ds)
-    {
-        $this->datasource =$ds;
+        $this->datasource = $datasource;
     }
 }

@@ -47,7 +47,6 @@ class Menu extends AbstractView
     private $dataMenu = array();
     private $jsFunction = array();
     private $userId;
-    public  $css = 'css/style.css';
 
     private function exec($cod)
     {
@@ -60,9 +59,9 @@ class Menu extends AbstractView
         $this->loadApplication();
         $this->response->setTitle('Menù');
         $this->response->addCss('/vendor/font-awesome-4.2.0/css/font-awesome.min.css');
-        $this->response->addCss(OSY_WEB_ROOT.$this->css);
+        $this->response->addCss('css/style.css');
         $this->response->addJsFile('/vendor/jquery/jquery-1.10.2.min.js');
-        $this->response->addJsFile('js/view/Menu.js');
+        $this->response->addJsFile('Ocl/View/Menu/controller.js');
         $this->response->addJsCode($this->javascriptFunction());
         $form = $this->response->getBody()->add(new Tag('form'));
         $form->add('<input type="hidden" id="osy[fid]" name="osy[fid]" value="'.$this->request->get('input.osy.fid').'">');
@@ -162,7 +161,7 @@ class Menu extends AbstractView
                          INNER JOIN osy_obj_rel rul ON (men.o_id = rul.o_1) -- ruoli
                          LEFT JOIN osy_obj_prp  lng ON (men.o_id = lng.o_id AND lng.p_id = 'language' AND lng.p_ord = $l)
                          LEFT JOIN osy_obj_prp  mic ON (men.o_id = mic.o_id AND mic.p_id = 'url-icone')
-                         LEFT JOIN osy_obj_prp  mic64 ON (men.o_id = mic64.o_id AND mic.p_id = 'icon-base64')
+                         LEFT JOIN osy_obj_prp  mic64 ON (men.o_id = mic64.o_id AND mic64.p_id = 'icon-base64')
                          LEFT JOIN osy_obj_prp  ifa ON (men.o_id = ifa.o_id AND ifa.p_id = 'ico-fontawesome')
                          LEFT JOIN osy_obj_prp  mpr ON (men.o_id = mpr.o_id AND mpr.p_id = 'osy-form')
                          LEFT JOIN osy_obj_prp  mfp ON (men.o_id = mfp.o_id AND mfp.p_id = 'url-fisic-page')

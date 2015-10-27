@@ -25,17 +25,12 @@
 namespace Opensymap\Ocl\Component;
 
 use Opensymap\Osy as env;
-use Opensymap\Driver\DboAdapterInterface;
-use Opensymap\Driver\DboHelper;
 use Opensymap\Lib\Tag;
 use Opensymap\Ocl\Component\AbstractComponent;
 use Opensymap\Ocl\Component\HiddenBox;
 
-class Label extends AbstractComponent implements DboAdapterInterface
+class Label extends AbstractComponent
 {
-    use DboHelper;
-    
-    private $db;
     private $datasource;
     
     public function __construct($name)
@@ -47,14 +42,13 @@ class Label extends AbstractComponent implements DboAdapterInterface
     
     protected function build()
     {
-        $val = get_global($this->id,$_REQUEST);
-        if ($sql = $this->get_par('datasource-sql')) {
-            $sql = $this->replacePlaceholder($sql, $this->getRequest('input'));
-            $val = $this->get_par('db-field-connected') ? $val : '[get-first-value]';
-            $val = $this->getFromDatasource($val, $sql, $this->db);
+        $val = get_global($this->id, $_REQUEST);
+        if (!empty($this->datasource)) {
+            $val = $this->getParameter('db-field-connected') ? $val : '[get-first-value]';
+            $val = $this->getFromDatasource($val, $this->datasource->get());
         }
-        if ($pointer = $this->get_par('global-pointer')) {
-            $ref = array(&$GLOBALS,&$_REQUEST,&$_POST);
+        if ($pointer = $this->getParameter('global-pointer')) {
+            $ref = array(&$GLOBALS, &$_REQUEST, &$_POST);
             foreach ($ref as $global_arr) {
                 if (key_exists($pointer,$global_arr)) {
                     $val = $global_arr[$pointer];
@@ -69,14 +63,16 @@ class Label extends AbstractComponent implements DboAdapterInterface
         }
     }
     
-    public static function getFromDatasource($val, $lst, $db=null)
+    public function getFromDatasource($val, $lst)
     {
         $lbl = $val;
-        if (!is_array($lst) && !is_null($db)) {
+        
+        //TODO: Va sostituita con la visualizzazione dell'eventuale errore presente nel datasource
+        if (!is_array($lst)) {
+            
             try {
                 $lst = $db->exec_query($lst,null,'NUM');
             } catch(Exception $e) {
-               echo $lst;
                $this->att(0,'dummy');
                $this->add('<div class="osy-error" id="'.$this->id.'">SQL ERROR - [LABEL]</div>');
                $this->add('<div class="osy-error-msg">'.($e->getMessage()).'</div>');
@@ -86,9 +82,14 @@ class Label extends AbstractComponent implements DboAdapterInterface
         
         if ($val == '[get-first-value]') {
             return !empty($lst[0]) ? nvl($lst[0][1],$lst[0][0]) : null;
-        } elseif (is_array($lst)) {
+        }
+        if (is_array($lst)) {
             foreach($lst as $k => $rec) {
+                $rec = array_values($rec);
                 if ($rec[0] == $val) {
+                    if ($positionValue = $this->getParameter('hiddenValuePosition')) {
+                        $_REQUEST[$this->id] = $rec[$positionValue];
+                    }
                     return nvl($rec[1],$rec[0]);
                 }
             }
@@ -103,6 +104,6 @@ class Label extends AbstractComponent implements DboAdapterInterface
     
     public function setDatasource($ds)
     {
-        $this->datasource =$ds;
+        $this->datasource = $ds;
     }
 }

@@ -80,9 +80,9 @@ abstract class AbstractComponent extends Tag
     protected function _build()
     {
         $this->trigger('onbuild');
-        if ($is_pk = $this->get_par('db-field-is-pkey')) {
-            $this->att('class','osy-pkey',true)
-                 ->att('osypk',$this->get_par('db-field-connected'));
+        if ($is_pk = $this->getParameter('db-field-is-pkey')) {
+            $this->att('class', 'osy-pkey', true)
+                 ->att('osypk', $this->getParameter('db-field-connected'));
         }
         $this->build();
         return parent::_build(-1);
@@ -90,7 +90,7 @@ abstract class AbstractComponent extends Tag
     
     abstract protected function build();
 
-    public function get_par($key)
+    public function getParameter($key)
     {
         return array_key_exists($key,$this->__par) ? $this->__par[$key] : null;
     }

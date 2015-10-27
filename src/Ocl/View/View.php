@@ -40,8 +40,8 @@ class View extends ViewOpensymap
         $this->response->addCss(OSY_WEB_ROOT.HelperOsy::nvl($this->param['css-instance'],'/css/style.css'));
         $this->response->addJsFile('/vendor/jquery/jquery-1.10.2.min.js');
         $this->response->addJsFile('/vendor/jquery/jquery-ui-1.10.3.custom.min.js');
-        $this->response->addJsFile('js/view/Form.js');
-        $this->response->addJsFile('js/view/FormMain.js');
+        $this->response->addJsFile('Ocl/View/View/FormController.js');
+        $this->response->addJsFile('Ocl/View/View/controller.js');
     }
     
     /**

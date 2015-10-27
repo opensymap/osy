@@ -66,8 +66,9 @@ class Login extends AbstractView
         );
         $css = empty($css) ? 'css/style.css' : OSY_WEB_ROOT.'/'.$css;
         $this->response->addCss($css);
-        $this->response->addCss('css/login.css');
-        $this->response->addJsFile('js/view/Login.js');
+        $this->response->addCss('Ocl/View/Login/style.css');
+        //add javascript controller
+        $this->response->addJsFile('Ocl/View/Login/controller.js');
         $this->response->addbody('<form method="post">
         <input id="iid" type="hidden" name="iid">
         <div id="form-container" align="center">

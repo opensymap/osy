@@ -47,13 +47,13 @@ class CheckList extends AbstractComponent implements DboAdapterInterface
     protected function build()
     {
         $a_val = array();
-        if ($val = $this->get_par('values')) {
+        if ($val = $this->getParameter('values')) {
             $a_val_raw = explode(',',$val);
             foreach($a_val_raw as $k => $val) {
                 $a_val[] = explode('=',$val);
             }
         }
-        if ($sql = $this->get_par('datasource-sql')) {
+        if ($sql = $this->getParameter('datasource-sql')) {
             $sql = $this->replacePlaceholder($sql);
             $a_val = $this->db->exec_query($sql,null,'NUM');
         }

@@ -28,13 +28,13 @@ use Opensymap\Ocl\Component\AbstractComponent;
 
 class InputBox extends AbstractComponent
 {
-	public function __construct($typ,$nam,$id=null)
+    public function __construct($typ,$nam,$id=null)
     {
         parent::__construct('input',$id);
         $this->att('type',$typ);
         $this->att('name',$nam);       
     }
-	
+
     protected function build()
     {
         $val = get_global($this->name,$_REQUEST);

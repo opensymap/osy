@@ -38,7 +38,7 @@ class Iframe extends AbstractComponent
 
     protected function build()
     {
-        $src = $this->get_par('src');
+        $src = $this->getParameter('src');
         if (!key_exists($this->id,$_REQUEST) && !empty($src)) {
             $_REQUEST[$this->id] = $src;
         }

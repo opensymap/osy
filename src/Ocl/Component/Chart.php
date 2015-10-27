@@ -24,31 +24,34 @@
 
 namespace Opensymap\Ocl\Component;
 
-use Opensymap\Osy as env;
 use Opensymap\Lib\Tag;
-use Opensymap\Driver\DboAdapterInterface;
-use Opensymap\Driver\DboHelper;
+use Opensymap\Helper\HelperOsy;
 use Opensymap\Ocl\AjaxInterface;
 use Opensymap\Ocl\Component\AbstractComponent;
 use Opensymap\Ocl\Component\HiddenBox;
 
 
-class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterface
+class Chart extends AbstractComponent implements AjaxInterface
 {
-    use DboHelper;
-    
-    private $__color__ = array('#F38630','#4D5360','#949FB1','#69D2E7','#E0E4CC');
+    private $__color__ = array(
+        '#F38630',
+        '#4D5360',
+        '#949FB1',
+        '#69D2E7',
+        '#E0E4CC'
+    );
     private $canvas;
     private $legend;
     private $cnt_id;
     private $db;
+    private $datasource;
     
     public function __construct($id)
     {
         parent::__construct('div', $id);
-        $this->addRequire('css/Chart.css');
-        $this->addRequire('js/chart/ChartNew.js');
-        $this->addRequire('js/component/Chart.js');
+        $this->addRequire('Ocl/Component/Chart/style.css');
+        $this->addRequire('Ocl/Component/Chart/ChartNew.js');
+        $this->addRequire('Ocl/Component/Chart/controller.js');
         $this->att('class','osy-graph');
     }
 
@@ -58,73 +61,30 @@ class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterfa
 
         $this->buildTabs();
 
-        /*if ($sql = $this->get_par('datasource-sql')) {
-            $sql = $this->replacePlaceholder($sql);
-            $val = $this->db->exec_query($sql,null,($this->get_par('graph-type') == 'pie' ? 'NUM' : 'ASSOC'));
-        }
-
-        if (empty($val)) {
-          $this->add("<p style=\"padding: 33px 0px; text-align: center; font-weight: bold;\">Impossibile costruire il grafico. Non ci sono dati.</p>");
-          return;
-        }*/
-
         $this->canvas = $this->add(tag::create('canvas'));
 
         foreach ($this->getAtt() as $k => $att) {
-            if ($k=='0') {
+            if ($k=='0' || $k=='style') {
                 continue;
             }
-            if ($k=='style') {
-                continue;
-            } 
             $this->canvas->att($k,$att);
         }
 
-        $this->canvas->att('id',$this->id.'_canvas')
+        $this->canvas
+             ->att('id',$this->id.'_canvas')
              ->att('class','osy-graph-canvas')->add(' ');
         $this->att('style','width: 97.5%;',true);
         $this->legend = $this->add(tag::create('table'));
         $this->legend->att('class','float-left');
         $js  = '';
         $opt = array();
-        /*$tot = 0;
-
-        foreach ($val as $k => $rec) {
-            $tot += (array_key_exists(1,$rec) ? $rec[1] : 0);
-        }
-
-        $datasets = array();
-
-        foreach ($val as $k => $rec) {
-            foreach ($rec as $j => $v) {
-                $datasets[$j][] = empty($v) ? '0' : $v;
-            }
-        }
-*/
-        /*if ($_REQUEST['ajax']==$this->id) {
-            header('Content-type: application/json; charset=utf-8');
-            $this->att('data-chart-type',$this->get_par('graph-type'));
-            switch ($this->get_par('graph-type')) {
-                case 'pie' :
-                    $data = $this->buildPie($datasets);
-                    break;
-                case 'bar'  :
-                    $data = $this->buildBar($datasets);
-                    break;
-                case 'line' :
-                    $data = $this->buildLine($datasets);
-                    break;
-            }
-            die(json_encode($data));
-        }*/
     }
     
     public function ajaxResponse($controller, &$response)
     {
-        if ($sql = $this->get_par('datasource-sql')) {
-            $sql = $this->replacePlaceholder($sql);
-            $val = $this->db->exec_query($sql,null,($this->get_par('graph-type') == 'pie' ? 'NUM' : 'ASSOC'));
-        }
+        if (!empty($this->datasource)) {
+            $val = is_array($this->datasource) ? $this->datasource : $this->datasource->get();
+        } 
 
         if (empty($val)) {
           $this->add("<p style=\"padding: 33px 0px; text-align: center; font-weight: bold;\">Impossibile costruire il grafico. Non ci sono dati.</p>");
@@ -134,7 +94,7 @@ class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterfa
         $tot = 0;
 
         foreach ($val as $k => $rec) {
-            $tot += (array_key_exists(1,$rec) ? $rec[1] : 0);
+            $tot += array_key_exists(1,$rec) ? $rec[1] : 0;
         }
 
         $datasets = array();
@@ -145,7 +105,7 @@ class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterfa
             }
         }
         
-        switch ($this->get_par('graph-type')) {
+        switch ($this->getParameter('graph-type')) {
             case 'pie':
                 $data = $this->buildPie($datasets);
                 break;
@@ -162,7 +122,7 @@ class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterfa
     
     private function buildTabs()
     {
-        if (!($tab = $this->get_par('graph-tab'))) return;
+        if (!($tab = $this->getParameter('graph-tab'))) return;
         $atab = explode(',',$tab);
         if (empty($_REQUEST[$this->id])){ 
             $_REQUEST[$this->id] = $atab[0];
@@ -200,11 +160,11 @@ class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterfa
              $labels = array_shift($datasets);
              foreach ($datasets as $k => $data) {
                 $str_datasets = (!empty($str_datasets) ? "," : '').
-                                    "{fillColor : 'rgba(220,220,220,0.5)',
-                                      strokeColor : 'rgba(220,220,220,1)',
-                                      pointColor : 'rgba(220,220,220,1)',
-                                      pointStrokeColor : '#fff',
-                                      data : [".implode(',',$data)."]}";
+                    "{fillColor : 'rgba(220,220,220,0.5)',
+                      strokeColor : 'rgba(220,220,220,1)',
+                      pointColor : 'rgba(220,220,220,1)',
+                      pointStrokeColor : '#fff',
+                      data : [".implode(',',$data)."]}";
              }
              $js = "var data = {labels : {$labels},
                                 datasets : [$str_datasets]}
@@ -216,29 +176,33 @@ class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterfa
     private function buildBar($raw_data)
     {
         $lbl = array_shift($raw_data);
-        $opt = array('inGraphDataShow'=> true,
-                     'inGraphDataYPosition' => 3,
-                     'scaleFontSize'=> 9,
-                     'inGraphDataFontSize' => 9,
-                     'yAxisMinimumInterval' =>1,
-                     'responsive' => true,
-                     'maintainAspectRatio' => false,
-                     'spaceLeft'=>20,
-                     'spaceRight'=>20,
-                     'spaceTop'=>10,
-                     'spaceBottom' => 10,
-                     'legend' => (count($raw_data)>1? true : false),
-                     'legendBorders' => false);
-        if (!$this->get_par('hide-title')) {
+        $opt = array(
+            'inGraphDataShow'=> true,
+            'inGraphDataYPosition' => 3,
+            'scaleFontSize'=> 9,
+            'inGraphDataFontSize' => 9,
+            'yAxisMinimumInterval' =>1,
+            'responsive' => true,
+            'maintainAspectRatio' => false,
+            'spaceLeft'=>20,
+            'spaceRight'=>20,
+            'spaceTop'=>10,
+            'spaceBottom' => 10,
+            'legend' => (
+                count($raw_data)>1 ? true : false
+            ),
+            'legendBorders' => false
+        );
+        if (!$this->getParameter('hide-title')) {
             $opt['graphTitle'] = $this->label;
         }
-        if ($onmousedownleft = $this->get_par('chartnew-mousedownleft')) {
+        if ($onmousedownleft = $this->getParameter('chartnew-mousedownleft')) {
             $opt['mouseDownLeft'] = 'function(event,ctx,config,data,other) { '.PHP_EOL.$onmousedownleft.PHP_EOL.'}';
             $opt['annotateDisplay'] = true;
         }
-        if ($fmt = $this->get_par('ingraphdatatmpl')) {
+        if ($fmt = $this->getParameter('ingraphdatatmpl')) {
             $dataset = array_values($raw_data)[0];
-            $fmt = env::replacevariable($fmt,$dataset,'\[(.*)\]');
+            $fmt = HelperOsy::replaceVariable($fmt,$dataset,'\[(.*)\]');
             $opt['inGraphDataTmpl'] = '\'<%='.str_replace("'",'"',$fmt).'%>\'';
         }
         $dat = $this->buildDataset($raw_data);
@@ -249,7 +213,9 @@ class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterfa
     private function buildDataset($raw_data)
     {
         $datasets = array();
-        $colors = $this->get_par('chartnew-graph-color') ?  explode(',',$this->get_par('chartnew-graph-color')) : $this->__color__;
+        $colors = $this->getParameter('chartnew-graph-color') ? 
+            explode(',',$this->getParameter('chartnew-graph-color')) : 
+            $this->__color__;
 
         switch (count($raw_data)) {
            case 0:
@@ -264,12 +230,14 @@ class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterfa
 
         $i = 0;
         foreach ($raw_data as $title => $data) {
-            $app = array('fillColor'   => $colors[$i],
-                         'strokeColor' => 'rgba(220,220,220,1)',
-                         'pointColor'  => 'rgba(220,220,220,1)',
-                         'pointStrokeColor' => '#fff',
-                         'data' => $data,
-                         'title' => $title);
+            $app = array(
+                'fillColor'   => $colors[$i],
+                'strokeColor' => 'rgba(220,220,220,1)',
+                'pointColor'  => 'rgba(220,220,220,1)',
+                'pointStrokeColor' => '#fff',
+                'data' => $data,
+                'title' => $title
+            );
             $datasets[] = $app;
             $i++;
         }
@@ -304,9 +272,10 @@ class Chart extends AbstractComponent implements DboAdapterInterface,AjaxInterfa
         }
         return "[".implode(",",$col)."]";
     }
+
     
-    public function setDboHandler($db)
+    public function setDatasource($ds)
     {
-        $this->db = $db;
+        $this->datasource = $ds;
     }
 }

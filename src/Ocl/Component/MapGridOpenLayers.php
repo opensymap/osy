@@ -36,8 +36,7 @@ class MapGridOpenLayers extends AbstractComponent
     public function __construct($name)
     {
         parent::__construct('dummy',$name);
-        env::$page->add_css(OSY_WEB_ROOT.'/css/leaflet.css');
-        env::$page->add_script(OSY_WEB_ROOT.'/js/component/omapgrid_openlayers.js');
+        $this->addRequire('Ocl/Component/MapGridOpenLayers/controller.js');
         $this->map = $this->add(tag::create('div'))->att('class','osy-mapgrid-openlayers');
         $this->add(new HiddenBox($this->id.'_ne_lat'));
         $this->add(new HiddenBox($this->id.'_ne_lng'));

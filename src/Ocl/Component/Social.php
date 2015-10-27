@@ -36,16 +36,14 @@ class Social extends AbstractComponent
     {
         parent::__construct('div',$name);
         $this->att('class','osy-social');
-        Osy::$page->add_css(OSY_WEB_ROOT.'/css/Social.css');
-        Osy::$page->add_script(OSY_WEB_ROOT.'/js/component/Social.js');
-        $this->addRequire('css/Social.css');
-        $this->addRequire('js/component/Social.js');
+        $this->addRequire('Ocl/Component/Social/style.css');
+        $this->addRequire('Ocl/Component/Social/controller.js');
         $pst = $this->add(tag::create('div'))->att('class','osy-social-post');
         $pst->add(new TextArea($name.'_post'))->att('class','osy-social-post');
         $pst->add(tag::create('div'))->att('class','osy-social-post-canvas');
         $pst->add(new Button($name.'send'))->att('class','osy-social-send-post')->att('label','Post');        
-        $this->add(tag::create('div'))->att('class','osy-social-body')                          
-                                      ->add('<ul class="notify">'.$this->printPostList($_REQUEST['_uid']).'</ul>');
+        $this->add(new Tag('div'))->att('class','osy-social-body')                          
+                                 ->add('<ul class="notify">'.$this->printPostList($_REQUEST['_uid']).'</ul>');
     }  
     
     protected function build()

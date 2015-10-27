@@ -39,12 +39,13 @@ class AutoComplete extends AbstractComponent implements AjaxInterface
         $this->att('type','text');
         $this->att('name',$name);
         $this->att('class','autocomplete');
-        $this->addRequire('js/component/AutoComplete.js');
+        $this->addRequire('Ocl/Component/AutoComplete/style.css');
+        $this->addRequire('Ocl/Component/AutoComplete/controller.js');
     }
     
     public function ajaxResponse($controller, &$response)
     {
-        $sql = $this->replacePlaceholder($this->get_par('datasource-sql'));
+        $sql = $this->replacePlaceholder($this->getParameter('datasource-sql'));
         $res = $controller->model->dba->exec_query($sql,null,'ASSOC');
         $response->message('result',$res);
     }

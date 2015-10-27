@@ -24,10 +24,8 @@
 
 namespace Opensymap\Ocl\Component;
 
-use Opensymap\Osy as env;
 use Opensymap\Lib\Tag as tag;
-use Opensymap\Driver\DboAdapterInterface;
-use Opensymap\Driver\DboHelper;
+use Opensymap\Datasource\InterfaceDatasourcePaging;
 use Opensymap\Ocl\AjaxInterface;
 use Opensymap\Ocl\Component\AbstractComponent;
 use Opensymap\Ocl\Component\Button;
@@ -35,22 +33,20 @@ use Opensymap\Ocl\Component\HiddenBox;
 use Opensymap\Ocl\Component\ComboBox;
 use Opensymap\Ocl\Component\TextBox;
 
-class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInterface
+class DataGrid extends AbstractComponent implements AjaxInterface
 {
-    use DboHelper;
-    
     private $__att = array();
     private $__col = array();
     private $__dat = array();
     private $__sta = array();
-    private $db  = null;
     private $datasource = null;
 
     public function __construct($name)
     {
         parent::__construct('div',$name);
-        //Add javascript manager;
-        $this->addRequire('js/component/DataGrid.js');
+        $this->addRequire('Ocl/Component/DataGrid/style.css');
+        //Add javascript controller;
+        $this->addRequire('Ocl/Component/DataGrid/controller.js');
         $this->att('class', 'osy-datagrid-2');
         $this->__par['type'] = 'datagrid';
         $this->__par['row-num'] = 0;
@@ -66,7 +62,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         $this->__par['layout'] = null;
         $this->__par['div-stat'] = null;
         $this->__par['head-hide'] = 0;
-        $this->checkAndBuildFilter();
+        
     }
     
     public function ajaxResponse($controller, &$response)
@@ -80,23 +76,20 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         $this->loadColumnObject();
         if ($this->rows) {
             $this->__par['row-num'] = $this->rows;
-        } 
-        if ($this->get_par('form-related')) {
-            //$this->setFormChild();
         }
-        if ($this->get_par('datasource-sql') || $this->datasource) {
+        if ($this->getParameter('datasource-sql') || $this->datasource) {
             $this->dataLoad();
         }
-        if ($this->get_par('filter-show')) {
+        if ($this->getParameter('filter-show')) {
            $this->buildFilter(); 
         }
-        if ($par = $this->get_par('mapgrid-parent')) {
+        if ($par = $this->getParameter('mapgrid-parent')) {
             $this->att('data-mapgrid', $par);
         }
-        if ($this->get_par('mapgrid-parent-refresh')) {
+        if ($this->getParameter('mapgrid-parent-refresh')) {
             $this->att('class', 'mapgrid-refreshable', true);
         }
-        if ($par = $this->get_par('mapgrid-infowindow-format')) {
+        if ($par = $this->getParameter('mapgrid-infowindow-format')) {
             $this->att('data-mapgrid-infowindow-format',$par);
         }
         //Aggiungo il campo che conterrà i rami aperti dell'albero.
@@ -112,7 +105,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                         ->att('id',$this->id.'-body')
                         ->att('class','osy-datagrid-2-body')
                         ->att('data-rows-num',$this->__par['rec_num']);
-        $hgt = $this->get_par('cell-height');
+        $hgt = $this->getParameter('cell-height');
 
         if (!empty($this->__par['row-num']) && !empty($hgt)) {
             $hgt = str_replace('px','', $hgt);
@@ -123,17 +116,17 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         }
 
         $tbl = $tbl_cnt->add(new Tag('table'));
-        if ($err = $this->get_par('error-in-sql')) {
+        if ($err = $this->getParameter('error-in-sql')) {
             $tbl->add(tag::create('tr'))->add(tag::create('td'))->add($err);
             return;
         }
-        if (is_array($this->get_par('cols'))) {
+        if (is_array($this->getParameter('cols'))) {
             $tbl_hd = $tbl->add(tag::create('thead'));
             $this->buildHead($tbl_hd);
         }
         if (is_array($this->__dat) && !empty($this->__dat)) {
             $tbl_bod = $tbl->add(tag::create('tbody'));
-            $lev = ($this->get_par('type') == 'datagrid') ? null : 0;
+            $lev = ($this->getParameter('type') == 'datagrid') ? null : 0;
             $this->buildBody($tbl_bod,$this->__dat,$lev);
         } else {
             $tbl->add(tag::create('td'))
@@ -147,61 +140,52 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
             //$tbl_hd->Child(0)->Child($k)->style = "width: ".round($p)."%";
         }
         //Setto il tipo di componente come classe css in modo da poterlo testare via js.
-        $this->att('class',$this->get_par('type'),true);
+        $this->att('class',$this->getParameter('type'),true);
         $this->buildPaging();
-    }
-
-    public function addFilter($field,$value,$operator='=')
-    {
-        if (empty($field) || empty($operator)) {
-            return false;
-        }
-        $b = $this->db->backticks;
-        $this->__par['sql_filter'][] = array(
-            $b.$field.$b,
-            array('val'=>$value,
-            'opr'=>$operator)
-        );
-        return true;
     }
 
     private function buildAdd()
     {
         if (!empty($this->__par['record-add'])) {
-            $this->add(tag::create('div'))->att('class','cmd-add')->add('<span class="fa fa-plus"></span>');
+            $this->add(tag::create('div'))
+                 ->att('class','cmd-add')
+                 ->add('<span class="fa fa-plus"></span>');
         }
     }
 
     private function buildFilter()
     {
         $cols = array();
-        if ($filters_raw = $this->get_par('filter-fields')) {
+        if ($filters_raw = $this->getParameter('filter-fields')) {
             $filters_raw = explode("\n",$filters_raw);
             $filters_lst = array();
-            foreach($filters_raw as $k => $filter_raw) {
+            foreach ($filters_raw as $k => $filter_raw) {
                 $filter = explode(',',$filter_raw);
                 $filters_lst[trim($filter[0])] = array_key_exists(1,$filter) ? trim($filter[1]) : trim($filter[0]);
             }
-            //var_dump($this->get_par('cols'));
-            foreach($this->get_par('cols') as $k => $col) {
+            //var_dump($this->getParameter('cols'));
+            foreach ($this->getParameter('cols') as $k => $col) {
                 if (array_key_exists($col['name'],$filters_lst)) {
                     $cols[] = array($col['name'].'[::]'.(in_array($col['native_type'],array('VAR_STRING','BLOB')) ? '==-=' : '==>=<='),$filters_lst[$col['name']]);
                 }
             }
         } else {
-            foreach($this->get_par('cols') as $k => $col) {
+            foreach ($this->getParameter('cols') as $k => $col) {
                 $cols[] = array($col['name'].'[::]'.(in_array($col['native_type'],array('VAR_STRING','BLOB')) ? '==-=' : '==>=<='),$col['name']);
             }
         }
-        $operator = array('='  => 'is equal to',
-                          '>=' => 'is greater than',
-                          '<=' => 'is less than',
-                          'like'=>'contains');
-        $flts = $this->add(tag::create('div'))->att('class','osy-datagrid-filters');
+        $operator = array(
+            '='  => 'is equal to',
+            '>=' => 'is greater than',
+            '<=' => 'is less than',
+            'like' => 'contains'
+        );
+        $flts = $this->add(new Tag('div'))
+                     ->att('class','osy-datagrid-filters');
         $i = 0;
         if (!empty($_REQUEST[$this->id.'_filter'])) {
             $lbls = tag::create('div')->att('class','osy-datagrid-filter-labels');
-            foreach($_REQUEST[$this->id.'_filter'] as $k => $rec) {
+            foreach ($_REQUEST[$this->id.'_filter'] as $k => $rec) {
                 list($rec[0],) = explode('[::]', $rec[0]);
                 if (empty($rec[0])) continue;
                 $lbl = $lbls->add(tag::create('span'))->att('class','osy-datagrid-filter-label');
@@ -217,8 +201,8 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
             }
             $i++;
         }
-        $flt = $flts->add(tag::create('div'))
-                    ->att('class','osy-datagrid-filter');
+        $flt = $flts->add(new Tag('div'))
+                    ->att('class', 'osy-datagrid-filter');
         $flt->add('Filter');
         $_REQUEST[$this->id.'_filter_fields'] = $_REQUEST[$this->id.'_filter_operator'] = $_REQUEST[$this->id.'_filter_value'] = '';
         $cmb_flt = $flt->add(new ComboBox($this->id.'_filter_fields'))
@@ -227,7 +211,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         $cmb_flt->par('datasource',$cols);
         $cmb_opr = $flt->add(new ComboBox($this->id.'_filter_operator'))->att('class','osy-datagrid-filter-operator');
         $cmb_opr->att('data-error','Non hai selezionato nessun operatore di confronto')->par('datasource',array());
-        //$flt->add( print_r($this->get_par('cols'),true) );
+        //$flt->add( print_r($this->getParameter('cols'),true) );
         $flt->add(new TextBox($this->id.'_filter_value'))->att('class','osy-datagrid-filter-value')->att('data-error','Non hai inserito nessun valore');
         $flt->add(new Button($this->id.'_filter_apply'))->att('label','Apply')->att('class','cmd-apply');
     }
@@ -238,7 +222,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
             return;
         }        
         $ico_tre = null;
-        foreach($this->__dat as $k => $row) {
+        foreach ($this->__dat as $k => $row) {
             if (array_key_exists('__groupedLevel',$row) ) {
                 $lev = $row['__groupedLevel'];
                 $pos = $row['__groupedPos'];
@@ -262,12 +246,12 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     private function buildHead($thead)
     {
         $tr = new Tag('tr');
-        if ($this->get_par('layout') == 'search') {
+        if ($this->getParameter('layout') == 'search') {
             $tr->add(tag::create('th'))->add("&nbsp;");
         }
-        $list_pkey = $this->get_par('pkey');
-        $cols = $this->get_par('cols');
-        foreach($cols as $k => $col) {
+        $list_pkey = $this->getParameter('pkey');
+        $cols = $this->getParameter('cols');
+        foreach ($cols as $k => $col) {
             if (is_array($list_pkey) && in_array($col['name'],$list_pkey)) {
                 continue;
             }
@@ -280,8 +264,8 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                          'realname' => strip_tags($col['name']),
                          'style'    => '',
                          'title'    => $col['name']);
-            if (array_key_exists($col['name'],$this->get_par('column-object'))) {
-                foreach($this->get_par('column-object')[$col['name']] as $k => $v) {
+            if (array_key_exists($col['name'],$this->getParameter('column-object'))) {
+                foreach ($this->getParameter('column-object')[$col['name']] as $k => $v) {
                     if ($k == 'hidden' && $v == '1') {
                         continue;
                     }
@@ -311,7 +295,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                                 $this->att('class','osy-treegrid',true);
                                 $this->par('type','treegrid');
                                 //$this->dataGroup();
-                                $this->__dat = $this->datasource->getGrouped('_tree');
+                                //$this->__dat = $this->datasource->getGrouped('_tree');
                                 //var_dump($this->__dat);
                                 break;
                             case '_chk'   :
@@ -326,8 +310,8 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                                 break;
                             case '_pivot' :
                                 //$this->dataPivot($tr);
-                                $this->__dat = $this->datasource->getGrouping();
-                                $thead->add($tr);
+                                list($hcol,$this->__dat) = $this->datasource->getPivot('_pivot');
+                                //$thead->add($tr);
                                 return;
                                 break;
                             case '_button':
@@ -363,12 +347,12 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                     ->add('<span>'.$opt['title'].'</span>');
             }
         }
-        if (($this->get_par('record-add') || $this->get_par('record-update')) && $this->get_par('print-pencil') ){
-            $cnt = $this->get_par('record-add') ? '<span class="fa fa-plus cmd-add-hd"></span>' : '&nbsp;';
+        if (($this->getParameter('record-add') || $this->getParameter('record-update')) && $this->getParameter('print-pencil') ){
+            $cnt = $this->getParameter('record-add') ? '<span class="fa fa-plus cmd-add-hd"></span>' : '&nbsp;';
             $tr->add(new Tag('th'))->add($cnt);
             $this->__par['cols_vis'] += 1;
         }
-        if (!$this->get_par('head-hide')){
+        if (!$this->getParameter('head-hide')){
             $thead->add($tr);
         }
     }
@@ -392,20 +376,24 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     private function buildRow(&$grd,$row,$lev=null,$pos=null,$ico_arr=null)
     {
         $t = $i = 0;
-        $orw = tag::create('tr');
+        $orw = new Tag('tr');
         $orw->tagdep = (abs($grd->tagdep)+1)*-1;
         $pk = $tree_id = null;
-        $opt = array('row' => array('class'  => array(),
-                                    'prefix' => array(),
-                                    'style'  => array(),
-                                    'attr'   => array(),
-                                    'cell-style-inc',array()),
-                    'cell' => array());
+        $opt = array(
+            'row' => array(
+                'class'  => array(),
+                'prefix' => array(),
+                'style'  => array(),
+                'attr'   => array(),
+                'cell-style-inc',array()
+            ),
+            'cell' => array()
+        );
         $primarykey = array();
         foreach ($row as $k => $v) {
-            if (array_key_exists('pkey',$this->__par)
+            if (array_key_exists('pkey', $this->__par)
                 && is_array($this->__par['pkey'])
-                && in_array($k,$this->__par['pkey']))
+                && in_array($k, $this->__par['pkey']))
             {
                 if (!empty($v)) {
                     $pk = $v;
@@ -418,22 +406,24 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                 $t++;
                 continue;
             }
-            $cel = tag::create('td');
-            $opt['cell'] = array('alignment'=> '',
-                                 'class'    => '',
-                                 'color'    => '',
-                                 'command'  => '',
-                                 'format'   => '',
-                                 'hidden'   => false,
-                                 'parameter'=> '',
-                                 'print'    => true,
-                                 'rawtitle' => $k,
-                                 'rawvalue' => $v,
-                                 'style'    => array(),
-                                 'title'    => $k,
-                                 'value'    => htmlentities($v));
-            if (array_key_exists($k, $this->get_par('column-object'))) {
-                foreach($this->get_par('column-object')[$k] as $par_key => $par_val) {
+            $cel = new Tag('td');
+            $opt['cell'] = array(
+                'alignment'=> '',
+                'class'    => '',
+                'color'    => '',
+                'command'  => '',
+                'format'   => '',
+                'hidden'   => false,
+                'parameter'=> '',
+                'print'    => true,
+                'rawtitle' => $k,
+                'rawvalue' => $v,
+                'style'    => array(),
+                'title'    => $k,
+                'value'    => htmlentities($v)
+            );
+            if (array_key_exists($k, $this->getParameter('column-object'))) {
+                foreach ($this->getParameter('column-object')[$k] as $par_key => $par_val) {
                     switch ($par_key) {
                         case 'hidden':
                             if ($par_val == '1'){
@@ -491,16 +481,16 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
             $orw->att('class',implode(' ',$opt['row']['class']));
         }
         if (!empty($opt['row']['attr'])) {
-            foreach($opt['row']['attr'] as $item) {
+            foreach ($opt['row']['attr'] as $item) {
               $orw->att($item[0],$item[1]);
             }
         }
-        if ($this->get_par('layout') == 'search' && $orw->oid) {
+        if ($this->getParameter('layout') == 'search' && $orw->oid) {
             $orw->add(tag::create('td'),'first')
                 ->att('class','center')
                 ->add('<input type="radio" name="rad_search" value="'.$orw->oid.'" class="osy-radiosearch">');
         }
-        if ($this->get_par('print-pencil') && $this->get_par('record-update')) {
+        if ($this->getParameter('print-pencil') && $this->getParameter('record-update')) {
             $orw->add(tag::create('td'))
                 ->att('class','center')
                 ->att('style','padding: 3px 3px; vertical-align: middle;')
@@ -512,23 +502,27 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     private function checkAndBuildFilter()
     {
         if (!empty($_REQUEST[$this->id.'_filter']) && is_array($_REQUEST[$this->id.'_filter'])) {
-            foreach($_REQUEST[$this->id.'_filter'] as $k => $filter) {
+            foreach ($_REQUEST[$this->id.'_filter'] as $k => $filter) {
                 if (is_array($filter) && count($filter) == 3) {
                     list($filter[0],) = explode('[::]',$filter[0]);
                     if ($filter[1] == 'like') {
                         $filter[2] = '%'.$filter[2].'%';
                     }
-                    $this->addFilter($filter[0],$filter[2],$filter[1]);
+                    $this->datasource->addFilter($filter[0],$filter[2],$filter[1]);
                 }
             }
         }
         if (empty($_REQUEST[$this->id]) || !is_array($_REQUEST[$this->id])) {
             return;
         }
-        foreach($_REQUEST[$this->id] as $field => $value) {
-            $this->addFilter($field,$value);
+        foreach ($_REQUEST[$this->id] as $field => $value) {
+            $this->datasource->addFilter($field, $value);
         }
-        $this->att('class','osy-update-row',true);
+        $this->att(
+            'class',
+            'osy-update-row', 
+            true
+        );
     }
 
     private function formatCellValue($row, $opt, $pk, $lev, $pos, $ico_arr=null)
@@ -610,7 +604,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                            ? '<span class="tree tree-plus-'.$pos.'">&nbsp;</span>'
                            : '<span class="tree tree-con-'.$pos.'">&nbsp;</span>';
                     $opt['row']['prefix'][] = $ico;
-                    if (!empty($lev)){
+                    if (!empty($lev)) {
                         $opt['row']['class'][] = 'hide';
                     }
                 }
@@ -658,7 +652,8 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
     private function dataLoad()
     {
         if ($this->datasource) {
-            $this->datasource->fill();
+            //Scorro il recordset
+            $this->__dat = $this->datasource->get();
             //Salvo le colonne in un option
             $this->__par['cols'] = $this->datasource->getColumns();
             $this->__par['cols_tot'] = count($this->__par['cols']);
@@ -668,9 +663,6 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
             }
             $this->__par['pag_cur'] = $this->datasource->getPage('current');
             $this->__par['pag_tot'] = $this->datasource->getPage('total');
-            //Scorro il recordset
-            $this->__dat = $this->datasource->get();
-            return;
         }
     }
 
@@ -703,8 +695,8 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
 
        $data_pivot = array();
        ksort($hrow); ksort($hcol);
-       foreach($hrow as $row){
-           foreach($hcol as $i => $col){
+       foreach ($hrow as $row){
+           foreach ($hcol as $i => $col){
                if (empty($i)){
                    $drow[$col] = $row; //Aggiuno la label della riga
                } else {
@@ -715,7 +707,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
        }
        $this->__dat = $data_pivot;
        $ncol = array();
-       foreach($hcol as $i => $col){
+       foreach ($hcol as $i => $col){
           if (empty($i)) continue;
           $tr->add(tag::create('th'))->att('class','no-order')->add($col);
        }
@@ -732,7 +724,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
                 INNER JOIN osy_obj_prp p ON (o.o_id = p.o_id )
                 WHERE o.o_own = ?";
         $res = env::$dbo->exec_query($sql,array($oid));
-        foreach($res as $rec) {
+        foreach ($res as $rec) {
             $this->__par['column-object'][$rec['obj_nam']][$rec['prp_id']] = $rec['prp_vl'];
         }*/
     }
@@ -742,12 +734,7 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         return $this->__col;
     }
     
-    public function setDboHandler($db)
-    {
-        $this->db = $db;
-    }
-    
-    public function setDatasource($datasource)
+    public function setDatasource(InterfaceDatasourcePaging $datasource)
     {
         $this->datasource = $datasource;
         //Set current page, page command, Row for page
@@ -760,5 +747,6 @@ class DataGrid extends AbstractComponent implements DboAdapterInterface,AjaxInte
         $this->datasource->orderBy(
             $_REQUEST[$this->id.'_order']
         );
+        $this->checkAndBuildFilter();
     }
 }

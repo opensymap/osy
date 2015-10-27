@@ -36,8 +36,8 @@ class IframeTab extends AbstractComponent
     {
        parent::__construct('div',$name);
        $this->att('class','osy-iframe-tab tabs');
-       //osy_form::$page->add_script('../lib/jquery/jquery.scrollabletab.js');
-       $this->addRequire('js/component/Iframe.js');
+       $this->addRequire('Ocl/Component/IFrame/controller.js');
+       $this->addRequire('Ocl/Component/IFrameTab/controller.js');
     }
     
     protected function build()
@@ -45,7 +45,7 @@ class IframeTab extends AbstractComponent
         $this->add(tag::create('ul'));
         //$this->iframe = $this->add(tag::create('iframe'));
         //$this->iframe->att('name',$this->id)->att("style",'width: 100%;');
-        $src = $this->get_par('src');
+        $src = $this->getParameter('src');
         if (!array_key_exists($this->id,$_REQUEST) && !empty($src)) {
             $_REQUEST[$this->id] = $src;
         }

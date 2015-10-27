@@ -5,7 +5,6 @@ use Opensymap\Ocl\Component\ComponentFactory;
 use Opensymap\Response\JsonResponse;
 use Opensymap\Response\PageError;
 
-
 /**
  * Opensymap controller class
  *

@@ -44,15 +44,17 @@ class Model
     
     public function __construct($objectId, &$request, $dbOsy)
     {
-        $this->dictionary = new Dictionary(array(
-            'id'=>null,
-            'model'=>array(
-                'field'=>array(),
-                'pkeyValue'=>array(),
-                'pkeyField' => array(),
-                'table'=>null
-            ),
-            'dbvalues'=>array())
+        $this->dictionary = new Dictionary(
+            array(
+                'id'=>null,
+                'model' => array(
+                    'field'=>array(),
+                    'pkeyValue'=>array(),
+                    'pkeyField' => array(),
+                    'table'=>null
+                ),
+                'dbvalues'=>array()
+            )
         );
         $this->dbo = $dbOsy;
         $this->request = $request;
@@ -64,7 +66,6 @@ class Model
             $this->dictionary->get('form.owner')
         );
         $this->dispatcher = $this->getEventDispatcher('data-manager', $this->response);
-        //var_dump($this->dispatcher);
     }
     
     public function &__get($key)
@@ -93,11 +94,12 @@ class Model
                     pcat.p2  AS "parameterType",
                     p.p_vl   AS "parameterValue" 
             FROM osy_obj o
-            LEFT JOIN osy_res      r     ON (o.o_sty = r.v_id AND r.k_id = \'osy-object-subtype\')
-            LEFT JOIN  osy_obj_prp p     ON (o.o_id = p.o_id)
-            LEFT JOIN  osy_res     pcat  ON (p.p_id = pcat.v_id AND pcat.k_id in (\'osy-propertie-form\',
-                                                                                  \'osy-propertie-field\',
-                                                                                  \'osy-propertie-trigger\'))
+            LEFT JOIN osy_res r
+                ON (o.o_sty = r.v_id AND r.k_id = \'osy-object-subtype\')
+            LEFT JOIN  osy_obj_prp p
+                ON (o.o_id = p.o_id)
+            LEFT JOIN  osy_res pcat
+                ON (p.p_id = pcat.v_id AND pcat.k_id in (\'osy-propertie-form\',\'osy-propertie-field\',\'osy-propertie-trigger\'))
             WHERE o.o_id LIKE ?',
             array("{$objectId}%"),
             'ASSOC'
@@ -151,7 +153,7 @@ class Model
             $this->dictionary->set('form', $form);
             $this->dictionary->set('model.table', $form['db-table-linked']);
         }
-                
+        //var_dump($this->{'model-field'});
         //Adjust pkey field;
         if ($pkeys = $this->dictionary->get('model.pkeyField')) {
             $totalPk = 0;

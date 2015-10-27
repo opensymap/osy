@@ -35,18 +35,15 @@ class MapGridGmap extends AbstractComponent implements DboAdapterInterface
     private $db;
     private $map;
     private $cnt;
+    private $datasource;
     
     public function __construct($name)
     {
         parent::__construct('dummy',$name);
-        //env::$page->add_css(OSY_WEB_ROOT.'/css/omapgrid.css');
-        //env::$page->add_script('http://maps.google.com/maps/api/js?sensor=false&amp;language=en&libraries=drawing');
-        //env::$page->add_script('/lib/gmap3-6.0.0/gmap3.min.js');
-        //env::$page->add_script(OSY_WEB_ROOT.'/js/component/MapGridGmap.js');
-        $this->addRequire('css/omapgrid.css');
+        $this->addRequire('Ocl/Component/MapGridGmap/style.css');
         $this->addRequire('http://maps.google.com/maps/api/js?sensor=false&amp;language=en&libraries=drawing');
         $this->addRequire('/vendor/gmap3-6.0.0/gmap3.min.js');
-        $this->addRequire('js/component/MapGridGmap.js');
+        $this->addRequire('Ocl/Component/MapGridGmap/controller.js');
         $this->map = $this->add(tag::create('div'))->att('class','osy-mapgrid');
         $this->add(new HiddenBox($this->id.'_ne_lat'));
         $this->add(new HiddenBox($this->id.'_ne_lng'));
@@ -65,7 +62,7 @@ class MapGridGmap extends AbstractComponent implements DboAdapterInterface
             } 
             $this->map->att($k,$v,true);
         }
-        if (empty($_REQUEST[$this->id.'_center']) && $sql = $this->get_par('datasource-sql')) {
+        if (empty($_REQUEST[$this->id.'_center']) && $sql = $this->getParameter('datasource-sql')) {
             $sql = $this->replacePlaceholder($sql);
             $res = $this->db->exec_query($sql);
             if (empty($res)) { 
@@ -73,7 +70,7 @@ class MapGridGmap extends AbstractComponent implements DboAdapterInterface
             }
             $_REQUEST[$this->id.'_center'] = $res[0]['lat'].','.$res[0]['lng'];
         }
-        if ($grid = $this->get_par('datagrid-parent')){
+        if ($grid = $this->getParameter('datagrid-parent')){
             $this->map->att('data-datagrid-parent',$grid);
         }
     }
@@ -81,5 +78,10 @@ class MapGridGmap extends AbstractComponent implements DboAdapterInterface
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource = $ds;
     }
 }

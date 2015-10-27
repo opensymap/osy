@@ -41,16 +41,13 @@ class PropGrid extends AbstractComponent implements DboAdapterInterface, AjaxInt
     {
         parent::__construct('div',$name);
         $this->att('class','osy-grid-property');
-        $this->addRequire('css/PropGrid.css');
-        $this->addRequire('js/component/PropGrid.js');
+        $this->addRequire('Ocl/Component/PropGrid/style.css');
+        $this->addRequire('Ocl/Component/PropGrid/controller.js');
     }
 
     protected function build()
     {
-        if (!empty($_REQUEST['ajax'])) {
-            die($this->ajaxResp());
-        }
-        if ($sql = $this->get_par('datasource-sql')) {
+        if ($sql = $this->getParameter('datasource-sql')) {
             $this->dataLoad($sql);
         }
         $tbl = $this->add(tag::create('table'));

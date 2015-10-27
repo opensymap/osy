@@ -27,7 +27,7 @@ class Osy
             $_FILES, 
             $_SERVER
         );
-
+		
         //Load session;
         $this->session = new Session(
             $this->request->get('input.osy.sid'), 

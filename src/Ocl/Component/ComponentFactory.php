@@ -194,7 +194,7 @@ class ComponentFactory
         if (empty($par) || empty($val)) {
             return;
         }
-        $add = $component->get_par('record-add');
+        $add = $component->getParameter('record-add');
         if (is_null($add)) {
             $component->par('record-add',true);
         }

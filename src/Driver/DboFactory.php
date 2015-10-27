@@ -32,6 +32,7 @@ class DboFactory
                 WHERE     r.o_1 = ?
                 AND       r.o_2 = ?
                 AND       r.r_typ = 'instance+application'";
+        //var_dump(array('instance://'.$instanceId.'/', $applicationId));
         $cnString = self::$dbo->exec_unique($sql, array('instance://'.$instanceId.'/', $applicationId));
         return self::connection($cnString);
     }

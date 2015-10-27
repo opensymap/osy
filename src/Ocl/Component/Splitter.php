@@ -33,12 +33,9 @@ class Splitter extends AbstractComponent
     {
         parent::__construct('div',$nam);
         $this->att('class','osy-splitter');
-        $this->add('----');
-        env::$page->add_css(OSY_WEB_ROOT.'/css/Splitter.css');
-        env::$page->add_script(OSY_WEB_ROOT.'/js/component/Splitter.js');
-        
-        $this->addRequire('css/Splitter.css');
-        $this->addRequire('js/component/Splitter.js');
+        $this->add('----'); 
+        $this->addRequire('Ocl/Component/Splitter/style.css');
+        $this->addRequire('Ocl/Component/Splitter/controller.js');
     }
     
     protected function build()

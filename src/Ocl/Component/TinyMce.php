@@ -36,7 +36,7 @@ class TinyMce extends AbstractComponent
         $this->att('class','osy-tinymce');
         $this->add(new TextArea($name));
         $this->addRequire('/vendor/tinymce-4.1.10/tinymce.min.js');
-        $this->addRequire('js/component/TinyMce.js');
+        $this->addRequire('Ocl/Component/TinyMce/controller.js');
     }   
 
     protected function build()

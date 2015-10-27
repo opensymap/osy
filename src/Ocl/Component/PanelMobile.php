@@ -41,22 +41,24 @@ class PanelMobile extends AbstractComponent
         $this->panel->att('class','osy-panel-1')
                     ->par('label-position','inside');
         $this->att('class','osy-panel-mobile');
-        //env::$page->add_script(OSY_WEB_ROOT.'/js/component/PanelMobile.js');
-        $this->addRequire('js/component/PanelMobile.js');
+        //Load css
+        $this->addRequire('Ocl/Component/PanelMobile/style.css');
+        //Add javascript controller
+        $this->addRequire('Ocl/Component/PanelMobile/controller.js');
     }
     
     protected function build() 
     {       
-        if ($lp = $this->get_par('label-position')) {
+        if ($lp = $this->getParameter('label-position')) {
             $this->panel->par('label-position',$lp);
         }
-        if (!$this->get_par('disable-head')) {
+        if (!$this->getParameter('disable-head')) {
             $this->title = $this->add(tag::create('div'))
                                 ->att('class','osy-panel-mobile-title');
             $this->title->add(tag::create('span'))
                         ->att('class','osy-win-ico-set fright')
                         ->add('&nbsp;');           
-            $this->title->add($this->get_par('label'));
+            $this->title->add($this->getParameter('label'));
         }   
     }
     

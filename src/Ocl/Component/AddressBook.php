@@ -33,13 +33,13 @@ class AddressBook extends AbstractComponent
 
     public function __build_extra__()
     {
-        if (!$this->get_par('ajax'))
+        if (!$this->getParameter('ajax'))
         {
-            if ($this->get_par('form-related')) $this->setFormExternal();
+            if ($this->getParameter('form-related')) $this->setFormExternal();
             $this->buildHead();
             $this->buildFilter();
         }
-          elseif ($this->get_par('ajax') != "#".$this->att('id'))
+          elseif ($this->getParameter('ajax') != "#".$this->att('id'))
         {
             return;
         }
@@ -47,7 +47,7 @@ class AddressBook extends AbstractComponent
         ///parent::__build__();
     }
     
-    public function __construct($id,$sql='',$pag=0)
+    public function __construct($id, $sql='', $pag=0)
     {
         parent::__construct('div',$id);
         $this->__par['pag_cur'] = empty($pag) ? 0 : $pag;        
@@ -64,10 +64,8 @@ class AddressBook extends AbstractComponent
         $this->__par['filter']      = array();
         $this->__par['scroll-master'] = 'self';
         $this->__par['datasource-sql'] = $sql;
-        env::$page->add_css(OSY_WEB_ROOT.'/css/AddressBook.css');
-        env::$page->add_script(OSY_WEB_ROOT.'/js/component/AddressBook.js');
-        $this->addRequire(OSY_WEB_ROOT.'/css/AddressBook.js',Component::CSS);
-        $this->addRequire(OSY_WEB_ROOT.'/js/component/AddressBook.js',Component::JS);
+        $this->addRequire('Ocl/Component/AddressBook/style.css');
+        $this->addRequire('Ocl/Component/AddressBook/controller.js');
     }
     
     private function pageView()
@@ -78,7 +76,7 @@ class AddressBook extends AbstractComponent
         }
         try
         {
-            $sql = env::replaceVariable($this->get_par('datasource-sql'));            
+            $sql = env::replaceVariable($this->getParameter('datasource-sql'));            
             $sql = env::parseString($sql);
             $this->__par['datasource-sql'] = $sql;
             $this->__par['row_tot'] = env::$dba->exec_unique("SELECT COUNT(*) FROM (".$this->__par['datasource-sql'].") a");
@@ -92,7 +90,7 @@ class AddressBook extends AbstractComponent
            return false;
         }
         $where = '';
-        if ($filter = $this->get_par('filter')){
+        if ($filter = $this->getParameter('filter')){
             $where = 'where '.implode(' AND ',$filter);
         }
         if (array_key_exists('osy',$_REQUEST) && !empty($_REQUEST['osy']['rid'])){
@@ -117,10 +115,10 @@ class AddressBook extends AbstractComponent
         //$rs = $this->db->execquery($this->sql);
         $b = new tag('div');
         $b->att('class','osy-addressbook-body')
-          ->att('pag',$this->get_par('pag_cur'))
-          ->att('scroll-master',$this->get_par('scroll-master'));
+          ->att('pag',$this->getParameter('pag_cur'))
+          ->att('scroll-master',$this->getParameter('scroll-master'));
         try{
-            $par = $this->get_par('filter-parameters');
+            $par = $this->getParameter('filter-parameters');
             $rs = env::$dba->exec_query($this->__par['datasource-sql'],$par,'ASSOC');
         } catch (Exception $e){
             die($e->getMessage(). ' - ' .$this->__par['datasource-sql']);
@@ -128,7 +126,7 @@ class AddressBook extends AbstractComponent
         //while($rec = $this->db->getnextrecord($rs,'ASSOC'))
         if (empty($rs)){
             if (empty($_REQUEST['ajax'])){
-                $title = $this->get_par('title');
+                $title = $this->getParameter('title');
                 if (!empty($title)){
                     $title = in_array(strtolower($title[0]),array('a','e','i','o','u')) ? "L'".strtolower($title) : $title;
                 }
@@ -176,8 +174,8 @@ class AddressBook extends AbstractComponent
                         break;
                     case '_pk':
                         $a->att('pid',$v);
-                        if ($this->get_par('form') != null && $this->get_par('cmd_upd')!=false) {
-                            $cmd = str_replace(array('<pk>','<fid>','640','480'),array($v,$this->get_par('form')),$this->__par['cmd_upd']);
+                        if ($this->getParameter('form') != null && $this->getParameter('cmd_upd')!=false) {
+                            $cmd = str_replace(array('<pk>','<fid>','640','480'),array($v,$this->getParameter('form')),$this->__par['cmd_upd']);
                             $a->att('onclick',$cmd);
                         }
                         break;
@@ -237,13 +235,13 @@ class AddressBook extends AbstractComponent
     private function buildHead()
     {
             //Head
-        if (!$this->get_par('title')) return;
+        if (!$this->getParameter('title')) return;
         $head = new tag('div');
         $head->att('class','osy-addressbook-head');
-        $head->add('<h3>'.$this->get_par('title').'</h3>');
-        if ($this->get_par('form') != null && $this->get_par('cmd_add') != false)
+        $head->add('<h3>'.$this->getParameter('title').'</h3>');
+        if ($this->getParameter('form') != null && $this->getParameter('cmd_add') != false)
         {
-            $cmd = str_replace(array('<lbl>','<pk>','<fid>'),array($this->get_par('cmd_add_lbl'),"''",$this->get_par('form')),$this->get_par('cmd_add'));
+            $cmd = str_replace(array('<lbl>','<pk>','<fid>'),array($this->getParameter('cmd_add_lbl'),"''",$this->getParameter('form')),$this->getParameter('cmd_add'));
             $head->add('<div class="add">'.$cmd.'</div>');
             $head->add('<br style="clear: both" />');
         }
@@ -263,14 +261,14 @@ class AddressBook extends AbstractComponent
     
     public function cmd_upd($cmd,$lbl='Modifica')
     {
-        $this->get_par('cmd_upd',$cmd);
-        if ($this->get_par('cmd_add')) $this->get_par('cmd_add','<a href="#" onclick="'.$cmd.'"><lbl></a>');
-        $this->get_par('cmd_upd_lbl',$lbl);
+        $this->getParameter('cmd_upd',$cmd);
+        if ($this->getParameter('cmd_add')) $this->getParameter('cmd_add','<a href="#" onclick="'.$cmd.'"><lbl></a>');
+        $this->getParameter('cmd_upd_lbl',$lbl);
     }
     
     private function setFormExternal()
     {
-        $add = $this->get_par('record-add');
+        $add = $this->getParameter('record-add');
         if (is_null($add)) $this->par('record-add',true);
         $this->par('record-update',true);
         $res = $this->db->exec_query("SELECT frm.o_id  AS form_id,
@@ -298,27 +296,27 @@ class AddressBook extends AbstractComponent
                                       LEFT JOIN osy_obj_prp hprp   ON (frm.o_id = hprp.o_id AND hprp.p_id = 'height')
                                       LEFT JOIN osy_obj_prp wprp   ON (frm.o_id = wprp.o_id AND wprp.p_id = 'width')
                                       LEFT JOIN osy_res      fty   ON (frm.o_sty = fty.v_id AND fty.k_id = 'osy-object-subtype')
-                                      WHERE frm.o_id = ?",array($this->get_par('form-related'),$this->get_par('form-related-ins')),'NUM');
+                                      WHERE frm.o_id = ?",array($this->getParameter('form-related'),$this->getParameter('form-related-ins')),'NUM');
         $pkey = array();
         foreach($res as $k => $rec)
         {
-            if ($this->get_par('form-related') == $rec[0])
+            if ($this->getParameter('form-related') == $rec[0])
             {
                 $pkey[] = $rec[2];
                 $this->att('data-form',base64_encode(OSY_WEB_ROOT.$rec[1].'[::]'.$rec[0].'[::]'.nvl($rec[4],'640').'[::]'.nvl($rec[3],'480')));
             }
-             elseif($this->get_par('form-related-ins') == $rec[0])
+             elseif($this->getParameter('form-related-ins') == $rec[0])
             {
                 $this->att('data-form-insert',base64_encode(OSY_WEB_ROOT.$rec[1].'[::]'.$rec[0].'[::]'.nvl($rec[4],'640').'[::]'.nvl($rec[3],'480')));
             }
             
-            /*if ($this->get_par('form-related') == $rec[0])
+            /*if ($this->getParameter('form-related') == $rec[0])
             {
                 $pkey[] = $rec[2];
                 $this->att('data-form',$rec[5]);
                 $this->att('data-form-parameter',nvl($rec[4],'640').'&'.nvl($rec[3],'480'));
             }
-             elseif($this->get_par('form-related-ins') == $rec[0])
+             elseif($this->getParameter('form-related-ins') == $rec[0])
             {
                 $this->att('data-form-insert',$rec[5]);
                 $this->att('data-form-parameter',nvl($rec[4],'640').'&'.nvl($rec[3],'480'));

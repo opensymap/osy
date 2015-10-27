@@ -39,7 +39,7 @@ class Dummy extends AbstractComponent
     protected function build()
     {
          if (!($txt = get_global($this->id,$_REQUEST))) {
-            $txt = $this->get_par('text');
+            $txt = $this->getParameter('text');
             $txt = HelperOsy::replaceVariable($txt);
          }
          $this->add($txt);

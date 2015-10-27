@@ -10,14 +10,16 @@ class Desktop extends AbstractView
             $this->execAjax($cmd);
         }
         $this->response->setTitle(strip_tags($this->request->get('instance.title')));
+        //Append required css file
         $this->response->addCss('/vendor/font-awesome-4.2.0/css/font-awesome.min.css');
-        $this->response->addCss('css/odesktop.css');
+        $this->response->addCss('Ocl/View/Desktop/style.css');
+        //Append required js file
         $this->response->addJsFile('/vendor/jquery/jquery-1.10.2.min.js');
-        $this->response->addJsFile('js/lib/base64.js');
-        $this->response->addJsFile('js/lib/moment-2.10.2.js');
-        $this->response->addJsFile('js/odesktop.js');
-        $this->response->addJsFile('js/odesktop.notifications.js');
-        $this->response->addJsFile('js/owindow.js');
+        $this->response->addJsFile('Ocl/View/Desktop/base64.js');
+        $this->response->addJsFile('Ocl/View/Desktop/moment-2.10.2.js');
+        $this->response->addJsFile('Ocl/View/Desktop/controller.js');
+        $this->response->addJsFile('Ocl/View/Desktop/notifications.js');
+        $this->response->addJsFile('Ocl/View/Desktop/window.js');
         $this->response->addJsCode(
             "$(document).ready(function(){   
                 osy.set('instance','".$this->request->get('instance.id')."')

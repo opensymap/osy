@@ -38,14 +38,14 @@ class MultiBox extends AbstractComponent implements DboAdapterInterface
     
     public function __construct($nam, $id=null)
     {
-        $this->addRequire('js/component/DateBox.js');
+        $this->addRequire('Ocl/Component/DateBox/controller.js');
         parent::__construct('div',$nam,nvl($id,$nam));
         $this->att('class','osy-multibox');
     }
 
     protected function build()
     {
-        $sql = $this->get_par('datasource-sql');
+        $sql = $this->getParameter('datasource-sql');
         if (empty($sql)) {
             die('[ERROR] - Multibox '.$this->id.' - query builder assente');
         }
@@ -66,7 +66,7 @@ class MultiBox extends AbstractComponent implements DboAdapterInterface
                 $this->readonly = HelperOsy::exec_string(null,'return '.$this->readonly.';');
             }
             if ($this->readonly) {
-                $cmp = tag::create('span');
+                $cmp = new Tag('span');
                 if ($cmp_raw['typ'] == 'CMB') {
                     $cmp_raw['val'] = label::getFromDatasource($cmp_raw['val'],$cmp_raw['sql_qry'], $this->db);
                 }

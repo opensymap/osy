@@ -33,13 +33,12 @@ class FileBox extends AbstractComponent
     public function __construct($name, $personalize = true)
     {
         parent::__construct('dummy',$name);
-        $this->add(Tag::create('input'))
+        $this->add(new Tag('input'))
              ->att('id',$name)
              ->att('name',$name)
              ->att('type','file')
              ->att('class','osy-filebox hidden');
-        //env::$page->add_script(OSY_WEB_ROOT.'/js/component/FileBox.js');
-        $this->addRequire('js/component/FileBox.js');
+        $this->addRequire('Ocl/Component/FileBox/controller.js');
     }
     
     protected function build()

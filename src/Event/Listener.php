@@ -17,7 +17,7 @@ class Listener
             return;
         }
         if (!is_object($function) && !($function instanceof Closure)) {
-            if (!($function = @create_function('$Db, $response, $self', $function.PHP_EOL))) {
+            if (!($function = @create_function('$Db, $response, $context', $function.PHP_EOL))) {
                 $e = error_get_last();
                 $error  = 'TRIGGER : '.$this->getId().PHP_EOL;
                 $error .= 'EVENT   : '.$this->getEvent().PHP_EOL;
@@ -32,14 +32,13 @@ class Listener
     
     public function execute($db, $response, $context)
     {
-        //echo $this->repo['id'];
-        //echo OSY_VER;
-        if (!empty($this->repo['function'])) {
-            try {
-                return $this->repo['function']($db, $response, $context);
-            } catch (Error $e) {
-                return $e->getMessage();
-            }
+        if (empty($this->repo['function'])) {
+            return;
+        }
+        try {
+            return $this->repo['function']($db, $response, $context);
+        } catch (Error $e) {
+            return $e->getMessage();
         }
     }
     

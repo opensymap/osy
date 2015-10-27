@@ -37,16 +37,17 @@ class MapGridLeaflet extends AbstractComponent implements DboAdapterInterface
     private $map;
     private $cnt;
     private $db;
+    private $datasource;
     
     public function __construct($name)
     {
         parent::__construct('dummy',$name);
-        $this->addRequire('css/MapGridLeaflet.css');
-        $this->addRequire('css/MapGridLeafletDraw.css');
-        $this->addRequire('js/map/leaflet.js');
-        $this->addRequire('js/map/leaflet.awesome-markers.min.js');
-        $this->addRequire('js/map/leaflet.draw.js');
-        $this->addRequire('js/component/MapGridLeaflet.js');
+        $this->addRequire('Ocl/Component/MapGridLeaflet/style.css');
+        $this->addRequire('Ocl/Component/MapGridLeaflet/styleDraw.css');
+        $this->addRequire('/vendor/leaflet/leaflet.js');
+        $this->addRequire('/vendor/leaflet/leaflet.awesome-markers.min.js');
+        $this->addRequire('/vendor/leaflet/leaflet.draw.js');
+        $this->addRequire('Ocl/Component/MapGridLeaflet/controller.js');
         $this->map = $this->add(new Tag('div'))
                           ->att('class','osy-mapgrid-leaflet');
         $this->add(new HiddenBox($this->id.'_ne_lat'));
@@ -67,7 +68,7 @@ class MapGridLeaflet extends AbstractComponent implements DboAdapterInterface
             }
             $this->map->att($k,$v,true);
         }
-        if ($sql = $this->get_par('datasource-sql')) {
+        if ($sql = $this->getParameter('datasource-sql')) {
             $sql = $this->replacePlaceholder($sql);
             $res = $this->db->exec_unique($sql,null,'ASSOC');
         }
@@ -86,7 +87,7 @@ class MapGridLeaflet extends AbstractComponent implements DboAdapterInterface
         if (empty($_REQUEST[$this->id.'_center'])) {
             $_REQUEST[$this->id.'_center'] = $res['lat'].','.$res['lng'];
         }
-        if ($grid = $this->get_par('datagrid-parent')) {
+        if ($grid = $this->getParameter('datagrid-parent')) {
             $this->map->att('data-datagrid-parent',$grid);
         }
     }
@@ -94,5 +95,10 @@ class MapGridLeaflet extends AbstractComponent implements DboAdapterInterface
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource = $ds;
     }
 }

@@ -57,7 +57,7 @@ class TextSearch extends AbstractComponent implements DboAdapterInterface
     {
         $str_par = array();
         foreach (array('form-related-search','form-related') as $par) {
-            if (!$form = $this->get_par($par)) {
+            if (!$form = $this->getParameter($par)) {
                 continue;
             }
             if ($par=='form-related') {

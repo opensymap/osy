@@ -38,28 +38,30 @@ class TagList extends AbstractComponent implements DboAdapterInterface, AjaxInte
     {
         parent::__construct('div',$id);
         $this->class = 'osy-taglist';
-        $this->addRequire('js/component/TagList.js');        
+        $this->addRequire('Ocl/Component/TagList/style.css');
+        //Add javascript controller
+        $this->addRequire('Ocl/Component/TagList/controller.js');
     }
     
     protected function build() 
     {
         $this->add(new HiddenBox($this->id));
         $build_tag_from_datasource = false;
-        if ($this->get_par('database-save-parameters')) {
+        if ($this->getParameter('database-save-parameters')) {
             $this->att('class','osy-taglist-onextab',true);
             $build_tag_from_datasource = true;
         }
-        $ul = $this->add(tag::create('ul'));
-        if ($sql = $this->get_par('datasource-sql')) {
+        $ul = $this->add(new Tag('ul'));
+        if ($sql = $this->getParameter('datasource-sql')) {
             $sql = HelperOsy::replacevariable($sql);
             $res = $this->db->exec_query($sql,null,'NUM');
-            $datalist = $this->add(tag::create('datalist'));
+            $datalist = $this->add(new Tag('datalist'));
             $datalist->att('id',$this->id.'_data');
             foreach($res as $k => $rec) {
                 if ($rec[2] == 1) {
                     $ul->add('<li class="osy-taglist-entry" tid="'.$rec[0].'"><span class="osy-taglist-entry-text">'.$rec[1].'</span><a href="#" class="osy-taglist-entry-remove">remove</a></li>');
                 }
-                $datalist->add(tag::create('option'))->add($rec[1]);
+                $datalist->add(new Tag('option'))->add($rec[1]);
             }
         }
         
@@ -69,9 +71,9 @@ class TagList extends AbstractComponent implements DboAdapterInterface, AjaxInte
                 $ul->add('<li class="osy-taglist-entry" pos="'.$k.'"><span class="osy-taglist-entry-text">'.$v.'</span><a href="#" class="osy-taglist-entry-remove">remove</a></li>');
             }
         }
-        $txt = $ul->add(tag::create('li'))
+        $txt = $ul->add(new Tag('li'))
                   ->att('class','listbuilder-entry-text')
-                  ->add(tag::create('input'))
+                  ->add(new Tag('input'))
                   ->att('name',$this->id.'_add')
                   ->att('type','text')
                   ->att('class','add osy-taglist-input');
@@ -83,7 +85,7 @@ class TagList extends AbstractComponent implements DboAdapterInterface, AjaxInte
 
     public function ajaxResponse($controller, &$response)
     {
-        $rawParameters = $this->get_par('database-save-parameters');
+        $rawParameters = $this->getParameter('database-save-parameters');
         if (empty($rawParameters)) {
             $response->error('alert', 'Parameter database-save-parameters empty!');
             return;
@@ -104,7 +106,7 @@ class TagList extends AbstractComponent implements DboAdapterInterface, AjaxInte
         }
         //Load from db the list of tag admitted.
         $tagList = array();
-        if ($sql = $this->get_par('datasource-sql')) {
+        if ($sql = $this->getParameter('datasource-sql')) {
             $res = $this->db->exec_query($sql, null, 'NUM');
             foreach($res as $k => $rec) {
                 $tagList[$rec[1]] = $rec[0];
@@ -142,6 +144,6 @@ class TagList extends AbstractComponent implements DboAdapterInterface, AjaxInte
     
     public function setDatasource($ds)
     {
-        $this->datasource =$ds;
+        $this->datasource = $ds;
     }
 }

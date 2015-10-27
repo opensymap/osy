@@ -19,6 +19,7 @@ class DboOci
     public  $backticks = '"';
     public  $cn = null;
     private $__transaction = false;
+    //private $rs;
 
     public function __construct($str)
     {
@@ -144,7 +145,10 @@ class DboOci
 
     public function exec_query($sql, $par = null, $mth = null)
     {
-        $rs = $this->exec_cmd($sql,$par);
+        if (!empty($this->__cur)) {
+            oci_free_statement($this->__cur);
+        }
+        $this->__cur = $this->exec_cmd($sql,$par);
         switch ($mth) {
             case 'BOTH':
                 $mth = OCI_BOTH;
@@ -156,8 +160,8 @@ class DboOci
                 $mth = OCI_ASSOC;
                 break;
         }
-        oci_fetch_all($rs,$res,null,null,OCI_FETCHSTATEMENT_BY_ROW|OCI_RETURN_NULLS|OCI_RETURN_LOBS|$mth);
-        oci_free_statement($rs);
+        oci_fetch_all($this->__cur,$res,null,null,OCI_FETCHSTATEMENT_BY_ROW|OCI_RETURN_NULLS|OCI_RETURN_LOBS|$mth);
+        //oci_free_statement($this->__cur);
         return $res;
     }
 

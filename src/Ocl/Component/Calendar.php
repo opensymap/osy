@@ -36,33 +36,38 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
 {
     use DboHelper;
     
+    private $datasource;
     private $db;
     private $items = array();
-    private $days_of_week = array('Luned&igrave;',
-                                  'Marted&igrave;',
-                                  'Mercoled&igrave;',
-                                  'Gioved&igrave;',
-                                  'Venerd&igrave;',
-                                  'Sabato',
-                                  'Domenica');
+    private $days_of_week = array(
+        'Luned&igrave;',
+        'Marted&igrave;',
+        'Mercoled&igrave;',
+        'Gioved&igrave;',
+        'Venerd&igrave;',
+        'Sabato',
+        'Domenica'
+    );
 
-    private $LMonth = array('01' => 'Gennaio',
-                            '02' => 'Febbraio',
-                            '03' => 'Marzo',
-                            '04' => 'Aprile',
-                            '05' => 'Maggio',
-                            '06' => 'Giugno',
-                            '07' => 'Luglio',
-                            '08' => 'Agosto',
-                            '09' => 'Settembre',
-                            '10' => 'Ottobre',
-                            '11' => 'Novembre',
-                            '12' => 'Dicembre');
+    private $LMonth = array(
+        '01' => 'Gennaio',
+        '02' => 'Febbraio',
+        '03' => 'Marzo',
+        '04' => 'Aprile',
+        '05' => 'Maggio',
+        '06' => 'Giugno',
+        '07' => 'Luglio',
+        '08' => 'Agosto',
+        '09' => 'Settembre',
+        '10' => 'Ottobre',
+        '11' => 'Novembre',
+        '12' => 'Dicembre'
+    );
 
     public function __construct($init_date,$type=null)
     {
-        $this->addRequire('css/CalendarMain.css');
-        $this->addRequire('js/component/CalendarMain.js');
+        $this->addRequire('Ocl/Component/Calendar/style.css');
+        $this->addRequire('Ocl/Component/Calendar/controller.js');
         parent::__construct('div');
 
         try {
@@ -71,15 +76,20 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
             $idat = new \DateTime(date('Y-m-d'));
         }
 
-        $this->__par = array('type' => 'mounthly',
-                           'dimension'=>array('width'  => 640, 'height' => 480),
-                           'days' => array(),
-                           'type' => (empty($_REQUEST['calendar_layout']) ? 'mounthly' : $_REQUEST['calendar_layout']),
-                           'init-date' => $idat);
+        $this->__par = array(
+            'type' => 'mounthly',
+            'dimension' => array(
+                'width'  => 640, 
+                'height' => 480
+            ),
+            'days' => array(),
+            'type' => (empty($_REQUEST['calendar_layout']) ? 'mounthly' : $_REQUEST['calendar_layout']),
+            'init-date' => $idat
+        );
 
         $this->att('class',"osy-view-calendar");
           
-        switch($this->get_par('type')) {
+        switch($this->getParameter('type')) {
             case 'daily': 
                 $this->par('period',array($idat->format('Y-m-d'),$idat->format('Y-m-d')));
                 $this->par('build-method','build_daily');
@@ -111,11 +121,11 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
 
     public function build()
     {
-        if ($sql = $this->get_par('datasource-sql')) {
+        if ($sql = $this->getParameter('datasource-sql')) {
             $sql = $this->replacePlaceholder($sql);
             $this->set_datasource($sql , $this->db);
         }
-        switch($this->get_par('type')) {
+        switch($this->getParameter('type')) {
             case 'daily':
                 $this->__build_daily__();
                 break;
@@ -148,18 +158,18 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
         
     public function __build_daily__()
     {
-        $prev = new \DateTime($this->get_par('init-date')->format('Y-m-d'));
-        $next = new \DateTime($this->get_par('init-date')->format('Y-m-d'));
+        $prev = new \DateTime($this->getParameter('init-date')->format('Y-m-d'));
+        $next = new \DateTime($this->getParameter('init-date')->format('Y-m-d'));
         $prev->sub(new \DateInterval('P1D'));
         $next->add(new \DateInterval('P1D'));
-        $this->__build_toolbar__($this->get_par('init-date')->format('d F Y'),$prev,$next,'daily');
+        $this->__build_toolbar__($this->getParameter('init-date')->format('d F Y'),$prev,$next,'daily');
         $calendar = $this->add(tag::create('div'))->att('class','osy-view-calendar-daily');
         $body_noh = $calendar->add(tag::create('div'))->att('class','daily-events');
         $body = $calendar->add(tag::create('div'))->att('class','timed-events')->add(tag::create('table'));
         $curd = $this->_current_day.'/'.$this->__par__['init-month'].'/'.$this->__par__['init-year'];
         $devt = (!empty($this->items[$curd])) ? $this->items[$curd] : array();
         //var_dump($this->items);
-        $raw_items = array_key_exists($this->get_par('init-date')->format('Y-m-d'),$this->items) ? $this->items[$this->get_par('init-date')->format('Y-m-d')] : array();
+        $raw_items = array_key_exists($this->getParameter('init-date')->format('Y-m-d'),$this->items) ? $this->items[$this->getParameter('init-date')->format('Y-m-d')] : array();
         $items = array();
         foreach($raw_items as $rec) {
             $a = explode(':',$rec['hour']);
@@ -175,7 +185,7 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
         {
             $td = tag::create('td')->att('class','event-cont add_event '.$class);
             if (empty($items)){  $td->add('&nbsp;'); return $td; }
-            $pkey = $this->get_par('pkey');
+            $pkey = $this->getParameter('pkey');
                 
             foreach($items as $k => $rec) {
                 if (empty($rec)) continue;
@@ -227,16 +237,16 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
     }
 
     private function __build_weekly__(){
-        $start_day = $this->get_par('init-date')->format('Y-m-d');
+        $start_day = $this->getParameter('init-date')->format('Y-m-d');
         $intv = new \DateInterval('P1W');
-        $prev = new \DateTime($this->get_par('init-date')->format('Y-m-d'));
+        $prev = new \DateTime($this->getParameter('init-date')->format('Y-m-d'));
         $prev->sub($intv);
-        $next = new \DateTime($this->get_par('init-date')->format('Y-m-d'));
+        $next = new \DateTime($this->getParameter('init-date')->format('Y-m-d'));
         $next->add($intv);
 
         //Calcolo primo giorno della settimana.
         $week_day = $prev->format('w') == '0' ? 7 : $prev->format('w');
-        $current_day = new \DateTime($this->get_par('init-date')->format('Y-m-d'));
+        $current_day = new \DateTime($this->getParameter('init-date')->format('Y-m-d'));
         $current_day->sub(new \DateInterval('P'.($week_day-1).'D'));
         $last_day = new \DateTime($current_day->format('Y-m-d'));
         $last_day->add(new \DateInterval('P7D'));
@@ -275,7 +285,7 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
                 }
             }
         }
-        $pkey = $this->get_par('pkey');
+        $pkey = $this->getParameter('pkey');
         foreach (range(1,7) as $k => $v) {
             $rw1->add(tag::create('div'))
                 ->att('class','day-num')
@@ -305,7 +315,7 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
                          ->att('rowspan','2');
             $chh->add($hh.':00');
             if ($v == 8){ $chh->att('class','dummy-first',true); }
-            $current_day = new \DateTime($this->get_par('init-date')->format('Y-m-d'));
+            $current_day = new \DateTime($this->getParameter('init-date')->format('Y-m-d'));
             $current_day->sub(new \DateInterval('P'.($week_day-1).'D'));
             foreach(range(1,7) as $v){
                 $cel_1 = $row_1->add(tag::create('td'))->att('class','btop-solid add_event')->att('data-hour',$hh.':00');
@@ -336,8 +346,8 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
     private function __build_monthly__()
     {
         $days = array_pad(array(),43,"&nbsp;");
-        $month_len = $this->get_par('init-date')->format('t');
-        $start_day = $this->first_day_of_month($this->get_par('init-date')->format('Y-m-d'));
+        $month_len = $this->getParameter('init-date')->format('t');
+        $start_day = $this->first_day_of_month($this->getParameter('init-date')->format('Y-m-d'));
         //var_dump($start_day);
         for ($i = 0; $i < $month_len; $i++) {
             $days[$start_day + $i] = $i + 1;
@@ -345,12 +355,12 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
         $cell_hgt = floor(($this->__par['dimension']['height'] - 120) / 6);
         $cell_wdt  = floor($this->__par['dimension']['width'] / 7)-2;
         $intv = new \DateInterval('P1M');
-        $prev = new \DateTime($this->get_par('init-date')->format('Y-m-01'));
+        $prev = new \DateTime($this->getParameter('init-date')->format('Y-m-01'));
         $prev->sub($intv);
-        $next = new \DateTime($this->get_par('init-date')->format('Y-m-01'));
+        $next = new \DateTime($this->getParameter('init-date')->format('Y-m-01'));
         $next->add($intv);
         //Build toolbar;
-        $this->__build_toolbar__($this->get_par('init-date')->format('F Y'),$prev,$next);
+        $this->__build_toolbar__($this->getParameter('init-date')->format('F Y'),$prev,$next);
         //Build body;
         $body = $this->add(tag::create('table'))->att('class','osy-view-calendar-monthly osy-maximize');
         $row = $body->add(tag::create('thead'))->add(tag::create('tr'));
@@ -358,10 +368,10 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
             $row->add(tag::create('th'))->add($day);
         }
         $k        = $h = 1;
-        $data     = $this->get_par('init-date')->format('Y-m-');
+        $data     = $this->getParameter('init-date')->format('Y-m-');
         $tbody    = $body->add(tag::create('tbody'));
         $today    = date('Y-m-d');
-        $init_day     = $this->get_par('init-date')->format('Y-m-d');
+        $init_day     = $this->getParameter('init-date')->format('Y-m-d');
         for ($j = 0; $j < 6; $j++) {
             $row = $tbody->add(tag::create('tr'));
             for ($i = 0; $i < 7; $i++) {
@@ -417,7 +427,7 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
     }
 
     private function __make_item__($par,$items,$class='',$hour=''){
-        $pkey = $this->get_par('pkey');
+        $pkey = $this->getParameter('pkey');
         foreach($items as $k => $rec) {
             if (empty($rec)) continue;
             $div = $par->add(tag::create('div'))
@@ -452,14 +462,13 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
     public function set_datasource($sql,$db)
     {
         if (empty($sql)) return;
-        $period = $this->get_par('period');
+        $period = $this->getParameter('period');
         $sql = "SELECT a.* FROM ({$sql}) a 
                 WHERE a.day 
                 BETWEEN str_to_date('{$period[0]} 00:00:00','%Y-%m-%d %H:%i:%s') 
                     AND str_to_date('{$period[1]} 23:59:59','%Y-%m-%d %H:%i:%s')";
         $rs = $db->exec_query($sql,null,'ASSOC');
-        foreach ($rs as $rec)
-        {
+        foreach ($rs as $rec) {
            $this->push_event($rec);
         }
     }
@@ -491,5 +500,10 @@ class Calendar extends AbstractComponent implements DboAdapterInterface,AjaxInte
     public function setDboHandler($db)
     {
         $this->db = $db;
+    }
+    
+    public function setDatasource($ds)
+    {
+        $this->datasource = $ds;
     }
 }

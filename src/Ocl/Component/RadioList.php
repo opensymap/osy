@@ -45,18 +45,18 @@ class RadioList extends Panel implements DboAdapterInterface
     protected function build()
     {
         $a_val = array();
-        if ($val = $this->get_par('values')) {
+        if ($val = $this->getParameter('values')) {
             $a_val_raw = explode(',',$val);
             foreach($a_val_raw as $k => $val) {
                 $a_val[] = explode('=',$val);
             }
         }
-        if ($sql = $this->get_par('datasource-sql')) {
+        if ($sql = $this->getParameter('datasource-sql')) {
             $sql = HelperOsy::replaceVariable($sql);
             $sql = HelperOsy::parseString($sql);
             $a_val = $this->db->exec_query($sql,null,'NUM');
         }
-        $dir = $this->get_par('direction');
+        $dir = $this->getParameter('direction');
         foreach ($a_val as $k => $val) {
             //$tr = $this->add(tag::create('tr'));
             //$tr->add(tag::create('td'))->add('<input type="radio" name="'.$this->id.'" value="'.$val[0].'"'.(!empty($_REQUEST[$this->id]) && $_REQUEST[$this->id] == $val[0] ? ' checked' : '').'>');

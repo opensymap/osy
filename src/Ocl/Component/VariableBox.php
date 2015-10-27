@@ -47,12 +47,17 @@ class VariableBox extends AbstractComponent implements DboAdapterInterface
 
     public function build()
     {
-        $sqlvar = $this->get_par('datasource-sql');
+        /*$sqlvar = $this->getParameter('datasource-sql');
         if (empty($sqlvar)) {
             die('[ERROR] - variable box '.$this->id.' - query builder assente');
         }
-        $sql = $this->replacePlaceholder($sqlvar);
-        list($componentBuilderId,$sqlBuilder) = $this->db->exec_unique($sql);
+        $sql = $this->replacePlaceholder($sqlvar);*/
+        
+        $res = $this->datasource->get()[0];
+        if (!empty($res)){
+            list($componentBuilderId,$sqlBuilder) = array_values($res);
+        }
+        
         if (!array_key_exists($componentBuilderId, $this->mapComponentMethod)){
             $this->buildTextBox();
             return;
@@ -62,13 +67,13 @@ class VariableBox extends AbstractComponent implements DboAdapterInterface
     
     private function buildComboBox($sql)
     {
-        $sql = $this->replacePlaceholder($sql);
+        $datasource = new \Opensymap\Datasource\DatasourceDbo($this->db);
+        $datasource->setQuery($sql);
+        
         $combo = new ComboBox($this->id);
-        $combo->setDboHandler($this->db);
-        $combo->setModel($this->getModel());
+        $combo->setDatasource($datasource);
         $this->add($combo)
-             ->att('label',$this->label)
-             ->par('datasource-sql',$sql);//Setto la risorsa per popolare la combo e la connessione al DB necessaria ad effettuare le query.
+             ->att('label',$this->label); //Setto la risorsa per popolare la combo e la connessione al DB necessaria ad effettuare le query.
     }
     
     private function buildTextArea()

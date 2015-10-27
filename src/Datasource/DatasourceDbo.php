@@ -10,7 +10,7 @@ class DatasourceDbo extends Datasource
     private $error = array();
     private $query;
     private $queryParams;
-    private $orderBy = 1;
+    private $orderBy = false;
     private $fetchMethod;
     private $rowForPage = 0;
     private $rowTotal = 0;
@@ -21,11 +21,12 @@ class DatasourceDbo extends Datasource
         'command' => null
     );
 
-    public function setQuery($query,array $params=array(), $fetchMethod='ASSOC')
+    public function setQuery($query, array $params=array(), $fetchMethod='ASSOC')
     {
         $this->query = $query;
         $this->queryParams = $params;
         $this->fetchMethod = $fetchMethod;
+        return $this;
     }
     
     private function buildQuery()
@@ -47,11 +48,14 @@ class DatasourceDbo extends Datasource
         }
         
         if (!empty($this->where)) {
+            $i = 0;
             foreach($this->where as $k => $filter) {
+                $placeholder = $this->source->get_type() == 'oracle' ? ':'.$i : '?';
                 $where .= empty($where) ? ''  : ' AND ';
                 //$where .= "a.{$filter[0]} {$filter[1]['opr']} '".str_replace("'","''",$filter[1]['val'])."'";
-                $where.= "a.".$filter[0]." ".$filter[1]['opr']." ? ";
+                $where.= "a.".$filter[0]." ".$filter[1]['opr']." ".$placeholder;
                 $this->queryParams[] = $filter[1]['val'];
+                $i++;
             }
             $sql .= " WHERE " .$where;
         }
@@ -63,11 +67,11 @@ class DatasourceDbo extends Datasource
                 $this->orderBy
             );
         }
-        
+
         if ($this->rowForPage > 0) {
             $sql = $this->buildQueryPaging($sql, $orderby);
         } else {
-            if (strtolower(strtok($sql,' ')) == 'select') {
+            if (empty($this->orderBy) && strtolower(strtok($sql,' ')) == 'select') {
                 $sql .= $orderby;
             }
         }
@@ -85,7 +89,7 @@ class DatasourceDbo extends Datasource
                 $this->queryParams
             );
         } catch(Exception $e) {
-            $this->error[] = $sqlCount."\n".$e->getMessage();
+            $this->error[] = $sql."1\n".$e->getMessage();
             return;
         }
         
@@ -179,9 +183,6 @@ class DatasourceDbo extends Datasource
     {
         $this->buildQuery();
         try {
-            /*$rs = $this->source->query($this->query);
-            $this->columns = $this->source->get_columns();
-            $this->recordsetRaw = $this->source->fetch_all($rs);*/
             $this->recordsetRaw = $this->source->exec_query(
                 $this->query,
                 $this->queryParams,
@@ -190,7 +191,7 @@ class DatasourceDbo extends Datasource
             $this->columns = $this->source->get_columns();
         } catch (PDOException $e) {
             $this->recordsetRaw = array(
-                array($this->query.'<br>'.$e->getMessage())
+                array($this->query.'<br>1'.$e->getMessage())
             );
         }
     }
@@ -213,7 +214,7 @@ class DatasourceDbo extends Datasource
     
     public function orderBy($val)
     {
-        $this->orderBy = $val;
+        $this->orderBy = empty($val) ? 1 : $val;
     }
 
     public function setPage($current, $command = null, $rowForPage = 10)

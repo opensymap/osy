@@ -44,7 +44,9 @@ class ImageBox extends AbstractComponent implements DboAdapterInterface,AjaxInte
              ->att('class','hidden')
              ->att('id',$id.'_file')
              ->name = $id;
-        $this->addRequire('js/component/ImageBox.js');        
+        $this->addRequire('Ocl/Component/ImageBox/style.css');
+        //Add javascript controller
+        $this->addRequire('Ocl/Component/ImageBox/controller.js');
     }
     
     protected function build()
@@ -52,7 +54,7 @@ class ImageBox extends AbstractComponent implements DboAdapterInterface,AjaxInte
         $img = '';
         //var_dump($_REQUEST[$this->id]);
         if (!empty($_REQUEST[$this->id])) {
-            if ($inblob = $this->get_par('store-in-blob')){
+            if ($inblob = $this->getParameter('store-in-blob')){
                 $img = '<img src="data:image/png;base64,'.base64_encode($_REQUEST[$this->id]).'">';
             } else {
                 $filename = $_SERVER['DOCUMENT_ROOT'].$_REQUEST[$this->id];
@@ -60,7 +62,7 @@ class ImageBox extends AbstractComponent implements DboAdapterInterface,AjaxInte
                     $img = '<img src="'.$filename.'">'; 
                 }
             }
-            if (!empty($img) && $dim_max = $this->get_par('crop-dimension'))
+            if (!empty($img) && $dim_max = $this->getParameter('crop-dimension'))
             {
                 $dim_img = getimagesize($filename);
                 $dim_max = explode(',',$dim_max);
@@ -79,7 +81,7 @@ class ImageBox extends AbstractComponent implements DboAdapterInterface,AjaxInte
                 $this->add('<div><img src="'.$_REQUEST[$this->id].'" class="osy-imagebox-master" title="'.$_REQUEST[$this->id].'"></div>',true);
             }
         }
-        if ($dim = $this->get_par('max-dimension')){
+        if ($dim = $this->getParameter('max-dimension')){
                 $dim = explode(',',$dim);
                 $sty = ' style="width:'.$dim[0].'px; height: '.$dim[1].'px;"';
         }
@@ -108,7 +110,7 @@ class ImageBox extends AbstractComponent implements DboAdapterInterface,AjaxInte
                 break;
             case 'delete':
                 $table = $controller->getModel()->form['db-table-linked'];
-                $field = $this->get_par('db-field-connected');
+                $field = $this->getParameter('db-field-connected');
                 if (!is_array($pkey)) {
                     $msg = 'Delete impossible.';
                     break;
