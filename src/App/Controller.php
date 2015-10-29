@@ -105,7 +105,7 @@ class Controller
     public function getResponse()
     {
         if (!$this->request->get('instance.id')) {
-            return PagerError(404,'Not found');
+            return new PageError(404,'Not found');
         }
         //If not public access to form, check if user is authenticated
         if ($this->accessLevel != 'public') {

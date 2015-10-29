@@ -47,7 +47,7 @@ class Router
                         THEN 0
                     ELSE 1 
                 END DESC",
-            array($this->uri.'%'),
+            array($uri.'%'),
             'BOTH'
         );
         $instance['uri'] = $uri;
