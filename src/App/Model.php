@@ -267,6 +267,28 @@ class Model
         
         $this->dispatcher->dispatch('form-exec');
         $pkeyValues = $this->dictionary->get('model.pkeyValue');
+        $dataModels = $this->dictionary->get('datamodel');
+        if (!empty($dataModels)) {
+            foreach ($dataModels as $dataModelId => $dataModelDef) {
+                $class = str_replace(
+                    array('org.opensymap/','/'), 
+                    array('','\\'),
+                    rtrim($dataModelDef['subtype'],'/')
+                );
+                $dataModel = new $class(
+                    $this->dba,
+                    $dataModelDef,
+                    $this->{'model-field'},
+                    $_REQUEST['pkey'],
+                    $this->response,
+                    $this->dispatcher
+                );
+                
+                $dataModel->save();
+                //var_dump($class);
+            }
+            return $this->response;
+        }
         if (empty($pkeyValues)) {
             return $this->insert($table, $fields);
         }

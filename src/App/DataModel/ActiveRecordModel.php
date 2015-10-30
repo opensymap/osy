@@ -6,15 +6,20 @@ use Opensymap\App\DataModel\FieldModel;
 class ActiveRecordModel implements InterfaceModel
 {
     private $properties;
+    private $dispatcher;
+    private $reponse;
     private $fields = array();
     private $identityFields = array();
+    private $identityValues = array();
     private $db;
     
-    public function __construct($db, $properties, $fields)
+    public function __construct($db, $properties, $fields, $identityValues, $response = null, $dispatcher = null)
     {
         $this->db = $db;
         $this->properties = $properties;
-        var_dump($properties);
+        $this->response = $response;
+        $this->dispatcher = $dispatcher;
+        $this->identityValues = $identityValues;
         foreach ($fields as $fieldId => $field) {
             $dbField = $field['name'];
             $this->fields[$dbField] = new FieldModel($field);        
@@ -23,78 +28,123 @@ class ActiveRecordModel implements InterfaceModel
             }
         }
     }
-   
-    public function save()
+    
+    private function getIdentityCondition()
     {
-        $params = array();
-        $table  = $this->properties['table'];
-        $where  = array();
+        $conditions = $values = array();
         foreach ($this->fields as $dbField => $field) {
-            $params[$field->name] = $field->getValue();
-            if (!empty($_REQUEST['pkey']) && $field->isPrimaryKey() && !empty($_REQUEST['pkey'][$field->name])) {
-                $where[$field->name] = $_REQUEST[$field->name];
+            $values[$field->name] = $field->getValue();
+            if (
+                !empty($this->identityValues) && 
+                $field->isPrimaryKey() && 
+                !empty($this->identityValues[$field->name])
+            ) {
+                $conditions[$field->name] = $this->identityValues[$field->name];
+                
             }
-        }        
-        if (empty($where)) {
-            $this->insert($table, $params);
-            return;
+           
         }
-        $this->update($table,$params, $where);
+        
+        if (empty($conditions) || count($conditions) != count($this->identityFields)) {
+            $conditions = null;
+        }
+        return array($conditions, $values);
     }
     
-    public function load($identityValues)
+    public function save()
     {
-        $par = array();
-        foreach ($this->identityFields as $k => $field) {
-            if (!empty($identityValues) && !empty($identityValues[$field->name])) {
-                $par[$field->name] = $identityValues[$field->name];
-            }
+        list($where, $values) = $this->getIdentityCondition();
+        if (empty($values)) {
+            return false;
         }
-        if (empty($par) || count($par) != count($this->identityFields)) {
+        if (empty($where)) {
+            $this->insert($values);
+        } else {
+            $this->update($values, $where);
+        }
+        return $this->response;
+    }
+    
+    public function load()
+    {
+        list($conditions, $values) = $this->getIdentityCondition();
+        
+        if (empty($conditions)) {
             return;
         }
+        
         $sql  = "SELECT * ";
         $sql .= "FROM {$this->properties['databaseTable']} ";
-        $sql .= "WHERE ".implode(' = ?, ',array_keys($par)).' = ?';
-        $rec = $this->db->exec_unique(
-            $sql, 
-            array_values($par), 
-            'ASSOC'
-        );
+        $sql .= "WHERE ".implode(' = ?, ',array_keys($conditions)).' = ?';
+        $rec = $this->db->exec_unique($sql, array_values($conditions), 'ASSOC');
         foreach ($rec as $fieldName => $fieldValue) {
             if (!array_key_exists($fieldName, $this->fields)) {
                 continue;
             }
             $_REQUEST[$this->fields[$fieldName]->getHtmlName()] = $fieldValue;
-        }       
+        }
     }
     
     public function delete()
     {
-        $table = $this->properties['table'];
-        $strSQL = 'DELETE FROM '.$table;
-        $strSQL .= 'WHERE (\''.implode('\', \'',array_values($where)).'\')';
-        var_dump($strSQL);
-    }
-    
-    public function insert($table, $params)
-    {
-        $strSQL = 'INSERT INTO '.$table;
-        $strSQL .= ' ('.implode(', ',array_keys($params)).')';
-        $strSQL .= ' VALUES ';
-        $strSQL .= ' (\''.implode('\', \'',array_values($params)).'\')';
-        var_dump($strSQL);
-    }
-    
-    public function update($table, $params, $where)
-    {
-        $strSQL = 'UPDATE '.$table.' SET ';
-        $strSQL .= implode(' = ?, ',array_keys($params)).' = ?';
-        $field = array();
-        foreach ($params as $k => $par) {
-            $field[] = "$k = ?";
+        list($condition, ) = $this->getIdentityCondition();
+        if (empty($this->properties['databaseTable']) || empty($condition)) {
+            return;
         }
-        //$strSQL .= implode(', ',$field);
-        var_dump($strSQL);
+        $this->dispatcher->dispatch('delete-before');
+        $this->dba->delete($this->properties['databaseTable'], $condition);
+        $this->dispatcher->dispatch('delete-after');
+        return $this->response;
+    }
+    
+    private function insert($values)
+    {
+        $this->dispatcher->dispatch('insert-before');
+		var_dump($values);
+        if (!$this->response->error()) {
+             $newId = $this->db->insert($this->properties['databaseTable'], $values);
+             $this->setIdentity($newId);
+             $this->dispatcher->dispatch('insert-after');
+        }
+        $this->dispatcher->dispatch('after-save');
+        return $this->response;
+    }
+    
+    private function update($values, $conditions)
+    {
+        $this->dispatcher->dispatch('update-before');
+        if (!$this->response->error()) {
+            $this->db->update($this->properties['databaseTable'], $values, $conditions);
+            $this->setIdentity();
+            $this->dispatcher->dispatch('update-after');
+        }
+        $this->dispatcher->dispatch('after-save');
+        return $this->response;
+    }
+    
+    public function setIdentity($newId=null)
+    {
+        if (empty($this->identityFields)) {
+            return;
+        }
+        
+        //For primarykey  with autoincrement
+        if (!empty($newId)) { 
+            $field = $this->identityFields[0];
+            $this->response->command('setpkey', array($field->name, $newId));
+            $_REQUEST[$field->getHtmlName()] = $_POST[$field->getHtmlName()] = $newId;
+            return;
+        }  
+        
+        //For primary key with manual insert
+        foreach ($this->identityFields as $field) {
+            $this->response->command(
+                'setpkey', 
+                array(
+                    $field->name, 
+                    $this->identityValues[$field->name]
+                )
+            );
+        }
     }
 }
