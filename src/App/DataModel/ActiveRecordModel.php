@@ -5,27 +5,29 @@ use Opensymap\App\DataModel\FieldModel;
 
 class ActiveRecordModel implements InterfaceModel
 {
-    private $properties;
+    private $db;
     private $dispatcher;
-    private $reponse;
     private $fields = array();
     private $identityFields = array();
     private $identityValues = array();
-    private $db;
+    private $properties;
+    private $reponse;
     
-    public function __construct($db, $properties, $fields, $identityValues, $response = null, $dispatcher = null)
+    public function __construct($db, $properties, $identityValues, $response = null, $dispatcher = null)
     {
         $this->db = $db;
         $this->properties = $properties;
         $this->response = $response;
         $this->dispatcher = $dispatcher;
         $this->identityValues = $identityValues;
-        foreach ($fields as $fieldId => $field) {
-            $dbField = $field['name'];
-            $this->fields[$dbField] = new FieldModel($field);        
-            if ($this->fields[$dbField]->isPrimaryKey()) {
-                $this->identityFields[] =&  $this->fields[$dbField];
-            }
+        
+    }
+    
+    public function map($dbField, $fieldProp) 
+    {
+        $this->fields[$dbField] = new FieldModel($fieldProp);
+        if ($this->fields[$dbField]->isPrimaryKey()) {
+            $this->identityFields[] =&  $this->fields[$dbField];
         }
     }
     
@@ -40,9 +42,7 @@ class ActiveRecordModel implements InterfaceModel
                 !empty($this->identityValues[$field->name])
             ) {
                 $conditions[$field->name] = $this->identityValues[$field->name];
-                
             }
-           
         }
         
         if (empty($conditions) || count($conditions) != count($this->identityFields)) {
@@ -87,12 +87,12 @@ class ActiveRecordModel implements InterfaceModel
     
     public function delete()
     {
-        list($condition, ) = $this->getIdentityCondition();
-        if (empty($this->properties['databaseTable']) || empty($condition)) {
+        list($conditions, ) = $this->getIdentityCondition();
+        if (empty($this->properties['databaseTable']) || empty($conditions)) {
             return;
         }
         $this->dispatcher->dispatch('delete-before');
-        $this->dba->delete($this->properties['databaseTable'], $condition);
+        $this->db->delete($this->properties['databaseTable'], $conditions);
         $this->dispatcher->dispatch('delete-after');
         return $this->response;
     }
@@ -100,7 +100,6 @@ class ActiveRecordModel implements InterfaceModel
     private function insert($values)
     {
         $this->dispatcher->dispatch('insert-before');
-		var_dump($values);
         if (!$this->response->error()) {
              $newId = $this->db->insert($this->properties['databaseTable'], $values);
              $this->setIdentity($newId);

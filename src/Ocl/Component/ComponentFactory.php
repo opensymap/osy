@@ -37,7 +37,6 @@ class ComponentFactory
     {
         self::$model = $model;
         self::$state = $state;
-        
     }
     
     public static function create($properties)
@@ -213,10 +212,11 @@ class ComponentFactory
                     'height',
                     'width',
                     'db-field-is-pkey',
-                    'db-field-connected'
+                    'db-field-connected',
+                    'isPrimaryKey'
                 )
              )
-             WHERE frm.o_typ IN ('form','field') AND  frm.o_id LIKE ?",
+             WHERE frm.o_typ IN ('form','field','model-field') AND  frm.o_id LIKE ?",
              array($val.'%'), 
              'ASSOC'
         );
@@ -241,10 +241,15 @@ class ComponentFactory
                 $fres['width']  = empty($rec['width'])  ? 640 : $rec['width'];
                 continue;
             }
-            if (!empty($rec['db-field-connected']) && !empty($rec['db-field-is-pkey'])) {
+            if (!empty($rec['db-field-connected']) && !empty($rec['db-field-is-pkey']) && !in_array($rec['db-field-is-pkey'],$pkey)) {
                 $pkey[] = $rec['db-field-connected'];
             }
+            if (!empty($rec['isPrimaryKey']) && !in_array($rec['name'],$pkey)) {
+                $pkey[] = $rec['name'];
+                
+            }
         }
+        //var_dump($form);
         $fres['field_pkey'] = implode(',',$pkey);
         $component->att('data-'.$par, base64_encode(json_encode($fres)));
         if (!empty($pkey)) {

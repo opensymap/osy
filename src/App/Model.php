@@ -77,6 +77,44 @@ class Model
         return $elm;
     }
 
+    private function dataModelInit($action)
+    {
+        //return false;
+        $dataModels = $this->datamodel;
+        
+        if (empty($dataModels)) {
+            return false;
+        }
+        
+        foreach ($dataModels as $dataModelId => $dataModelDef) {
+            
+            $class = str_replace(
+                array('org.opensymap/','/'), 
+                array('','\\'),
+                rtrim($dataModelDef['subtype'],'/')
+            );
+            
+            $dataModel = new $class(
+                $this->dba,
+                $dataModelDef,
+                $_REQUEST['pkey'],
+                $this->response,
+                $this->dispatcher
+            );
+            
+            //Add field to datamodel
+            foreach ($this->{'model-field'} as $fieldId => $field) {
+                if ($field['owner'] != $dataModelDef['id']) {
+                    continue;
+                }
+                $dataModel->map($field['name'], $field);
+            }
+            
+            $dataModel->{$action}();
+        }
+        return true;
+    }
+    
     public function loadDefinition($objectId)
     {
         if (empty($objectId)){
@@ -242,12 +280,17 @@ class Model
             if (is_callable(array($helper, $preSave))) {
                 $helper->{$preSave}($field, $this->request);
             }
-            if (!empty($fieldDb) && array_key_exists($fieldName, $_REQUEST)) {
+            //predatamodel
+            //if (!empty($fieldDb) && array_key_exists($fieldName, $_REQUEST)) {
+            if (array_key_exists($fieldName, $_REQUEST)) {
                 if ($_REQUEST[$fieldName] !== '0' && empty($_REQUEST[$fieldName])) {
                     //This command is necessary for set null into db field else pdo driver insert '';
                     $_REQUEST[$fieldName] = null;
                 }
-                $fields[$fieldDb] =& $_REQUEST[$fieldName];
+                //TODO : Da eliminare dopo che la migrazione ai DataModel sarà completa
+                if (!empty($fieldDb)) {
+                    $fields[$fieldDb] =& $_REQUEST[$fieldName];
+                }
                 $field['value'] =& $_REQUEST[$fieldName];
                 if ($errorMessage = $this->checkField($field)) {
                     $errors[] =  $this->response->appendMessage(
@@ -267,26 +310,8 @@ class Model
         
         $this->dispatcher->dispatch('form-exec');
         $pkeyValues = $this->dictionary->get('model.pkeyValue');
-        $dataModels = $this->dictionary->get('datamodel');
-        if (!empty($dataModels)) {
-            foreach ($dataModels as $dataModelId => $dataModelDef) {
-                $class = str_replace(
-                    array('org.opensymap/','/'), 
-                    array('','\\'),
-                    rtrim($dataModelDef['subtype'],'/')
-                );
-                $dataModel = new $class(
-                    $this->dba,
-                    $dataModelDef,
-                    $this->{'model-field'},
-                    $_REQUEST['pkey'],
-                    $this->response,
-                    $this->dispatcher
-                );
-                
-                $dataModel->save();
-                //var_dump($class);
-            }
+        //If datamodel exists
+        if ($this->dataModelInit('save')) {
             return $this->response;
         }
         if (empty($pkeyValues)) {
@@ -322,7 +347,10 @@ class Model
     public function delete()
     {
         $this->initResponse();
-        $this->dispatcher = $this->getEventDispatcher('data-manager');
+        $this->dispatcher = $this->getEventDispatcher('data-manager', $this->response);
+        if ($this->dataModelInit('delete')) {
+            return $this->response;
+        }
         $table = $this->dictionary->get('model.table');
         $pkeys = $this->dictionary->get('model.pkeyValue');
         if (empty($table) || empty($pkeys)) {
@@ -334,6 +362,8 @@ class Model
         return $this->response;
     }
     
+    
+    
     /**
      ** @abstract Metodo che recupera i dati necessari a valorizzare i diversi campi della form.
      **           I dati vengono ripresi dal DB e posizionati nel data set $data.
@@ -344,6 +374,9 @@ class Model
      **/
     public function select()
     {
+        if ($this->dataModelInit('load')) {
+            return;
+        }
         $table = $this->dictionary->get('model.table');
         $pkeys = $this->dictionary->get('model.pkeyValue');
         if (empty($table) || empty($pkeys)) {
