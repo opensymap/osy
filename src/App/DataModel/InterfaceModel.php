@@ -7,6 +7,8 @@ interface InterfaceModel
     
     public function delete();
     
+    public function isSoftDelete();
+    
     public function load();
     
     public function map($dbName, $fieldProp);

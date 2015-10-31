@@ -81,20 +81,45 @@ class ActiveRecordModel implements InterfaceModel
             if (!array_key_exists($fieldName, $this->fields)) {
                 continue;
             }
+            $htmlName = $this->fields[$fieldName]->getHtmlName();
+            if (array_key_exists($htmlName,$_REQUEST)) {
+                continue;
+            }
             $_REQUEST[$this->fields[$fieldName]->getHtmlName()] = $fieldValue;
         }
+    }
+    
+    public function isSoftDelete()
+    {
+        return !empty($this->properties['softDelete']);
     }
     
     public function delete()
     {
         list($conditions, ) = $this->getIdentityCondition();
+        
         if (empty($this->properties['databaseTable']) || empty($conditions)) {
-            return;
+            return false;
         }
         $this->dispatcher->dispatch('delete-before');
-        $this->db->delete($this->properties['databaseTable'], $conditions);
+        
+        if ($softDelete = $this->properties['softDelete']) {
+            $whr = $par = array();
+            foreach ($conditions as $field => $value) {
+                $whr[] = $field." = ?";
+                $par[] = $value;
+            }
+            $sql  = "UPDATE {$this->properties['databaseTable']} SET ";
+            $sql .= $softDelete.' ';
+            $sql .= "WHERE ".implode(' AND ',$whr);
+            
+            $this->db->exec_cmd($sql, $par);
+        } else {
+            $this->db->delete($this->properties['databaseTable'], $conditions);
+        }
+        
         $this->dispatcher->dispatch('delete-after');
-        return $this->response;
+        return true;
     }
     
     private function insert($values)
@@ -131,9 +156,12 @@ class ActiveRecordModel implements InterfaceModel
         if (!empty($newId)) { 
             $field = $this->identityFields[0];
             $this->response->command('setpkey', array($field->name, $newId));
+            //Datamodel EAV & Detail required.
+            $_REQUEST['pkey'][$field->name] = $_POST['pkey'][$field->name] = $newId;
+            //For beforeInsert trigger
             $_REQUEST[$field->getHtmlName()] = $_POST[$field->getHtmlName()] = $newId;
             return;
-        }  
+        }
         
         //For primary key with manual insert
         foreach ($this->identityFields as $field) {

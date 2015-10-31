@@ -85,7 +85,7 @@ class Model
         if (empty($dataModels)) {
             return false;
         }
-        
+        $this->dba->begin();
         foreach ($dataModels as $dataModelId => $dataModelDef) {
             
             $class = str_replace(
@@ -111,7 +111,12 @@ class Model
             }
             
             $dataModel->{$action}();
+            //If activeRecord execute a soft delete break delete operation
+            if ($action == 'delete' && $dataModel->isSoftDelete()) {
+                break;
+            }
         }
+        $this->dba->commit();
         return true;
     }
     
@@ -361,9 +366,7 @@ class Model
         $this->dispatcher->dispatch('delete-after');
         return $this->response;
     }
-    
-    
-    
+
     /**
      ** @abstract Metodo che recupera i dati necessari a valorizzare i diversi campi della form.
      **           I dati vengono ripresi dal DB e posizionati nel data set $data.
