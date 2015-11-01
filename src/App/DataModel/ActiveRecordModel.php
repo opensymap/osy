@@ -20,7 +20,6 @@ class ActiveRecordModel implements InterfaceModel
         $this->response = $response;
         $this->dispatcher = $dispatcher;
         $this->identityValues = $identityValues;
-        
     }
     
     public function map($dbField, $fieldProp) 
@@ -33,46 +32,27 @@ class ActiveRecordModel implements InterfaceModel
     
     private function getIdentityCondition()
     {
-        $conditions = $values = array();
+        $conditions = array();
+        if (empty($this->identityValues)) {
+            return null;
+        }
         foreach ($this->fields as $dbField => $field) {
-            $values[$field->name] = $field->getValue();
-            if (
-                !empty($this->identityValues) && 
-                $field->isPrimaryKey() && 
-                !empty($this->identityValues[$field->name])
-            ) {
+            if ($field->isPrimaryKey() && !empty($this->identityValues[$field->name])) {
                 $conditions[$field->name] = $this->identityValues[$field->name];
             }
         }
-        
         if (empty($conditions) || count($conditions) != count($this->identityFields)) {
             $conditions = null;
         }
-        return array($conditions, $values);
-    }
-    
-    public function save()
-    {
-        list($where, $values) = $this->getIdentityCondition();
-        if (empty($values)) {
-            return false;
-        }
-        if (empty($where)) {
-            $this->insert($values);
-        } else {
-            $this->update($values, $where);
-        }
-        return $this->response;
+        return $conditions;
     }
     
     public function load()
     {
-        list($conditions, $values) = $this->getIdentityCondition();
-        
+        $conditions = $this->getIdentityCondition();
         if (empty($conditions)) {
             return;
         }
-        
         $sql  = "SELECT * ";
         $sql .= "FROM {$this->properties['databaseTable']} ";
         $sql .= "WHERE ".implode(' = ?, ',array_keys($conditions)).' = ?';
@@ -82,7 +62,7 @@ class ActiveRecordModel implements InterfaceModel
                 continue;
             }
             $htmlName = $this->fields[$fieldName]->getHtmlName();
-            if (array_key_exists($htmlName,$_REQUEST)) {
+            if (array_key_exists($htmlName, $_REQUEST)) {
                 continue;
             }
             $_REQUEST[$this->fields[$fieldName]->getHtmlName()] = $fieldValue;
@@ -96,12 +76,12 @@ class ActiveRecordModel implements InterfaceModel
     
     public function delete()
     {
-        list($conditions, ) = $this->getIdentityCondition();
+        $conditions = $this->getIdentityCondition();
         
         if (empty($this->properties['databaseTable']) || empty($conditions)) {
             return false;
         }
-        $this->dispatcher->dispatch('delete-before');
+        $this->dispatcher->dispatch('delete-before',null,$this->id);
         
         if ($softDelete = $this->properties['softDelete']) {
             $whr = $par = array();
@@ -118,32 +98,81 @@ class ActiveRecordModel implements InterfaceModel
             $this->db->delete($this->properties['databaseTable'], $conditions);
         }
         
-        $this->dispatcher->dispatch('delete-after');
+        $this->dispatcher->dispatch('delete-after',null,$this->id);
         return true;
     }
     
-    private function insert($values)
+    private function getValues()
     {
-        $this->dispatcher->dispatch('insert-before');
-        if (!$this->response->error()) {
-             $newId = $this->db->insert($this->properties['databaseTable'], $values);
-             $this->setIdentity($newId);
-             $this->dispatcher->dispatch('insert-after');
+        $values = array();
+        foreach ($this->fields as $field) {
+            $values[$field->name] = $field->getValue();
         }
-        $this->dispatcher->dispatch('after-save');
+        return $values;
+    }
+    
+    public function save()
+    {
+        $where = $this->getIdentityCondition();
+        if (empty($where)) {
+            $this->insert();
+        } else {
+            $this->update($where);
+        }
         return $this->response;
     }
     
-    private function update($values, $conditions)
+    private function insert()
     {
-        $this->dispatcher->dispatch('update-before');
-        if (!$this->response->error()) {
-            $this->db->update($this->properties['databaseTable'], $values, $conditions);
-            $this->setIdentity();
-            $this->dispatcher->dispatch('update-after');
+        $this->dispatcher->setContext($this);
+        //Dispatch event beforeInsert
+        $this->dispatcher->dispatch(
+            'insert-before',
+            null,
+            $this->properties['id']
+        );
+        if ($this->response->error()) {
+            return;
         }
-        $this->dispatcher->dispatch('after-save');
-        return $this->response;
+        $values = $this->getValues();
+        $newId = $this->db->insert(
+            $this->properties['databaseTable'], 
+            $values
+        );
+        $this->setIdentity($newId);
+        //Dispatch event afterInsert
+        $this->dispatcher->dispatch(
+            'insert-after',
+            null,
+            $this->id
+        );
+    }
+    
+    private function update($conditions)
+    {
+        $this->dispatcher->setContext($this);
+        //Dispatch event beforeUpdate
+        $this->dispatcher->dispatch(
+            'update-before',
+            null,
+            $this->id
+        );
+        //If response has error exit;
+        if ($this->response->error()) {
+            return;
+        }
+        $this->db->update(
+            $this->properties['databaseTable'], 
+            $this->getValues(), 
+            $conditions
+        );
+        $this->setIdentity();
+        //Dispatch event afterUpdate
+        $this->dispatcher->dispatch(
+            'update-after',
+            null,
+            $this->id
+        );
     }
     
     public function setIdentity($newId=null)
@@ -155,7 +184,13 @@ class ActiveRecordModel implements InterfaceModel
         //For primarykey  with autoincrement
         if (!empty($newId)) { 
             $field = $this->identityFields[0];
-            $this->response->command('setpkey', array($field->name, $newId));
+            $this->response->command(
+                'setpkey',
+                array(
+                    $field->name,
+                    $newId
+                )
+            );
             //Datamodel EAV & Detail required.
             $_REQUEST['pkey'][$field->name] = $_POST['pkey'][$field->name] = $newId;
             //For beforeInsert trigger
@@ -173,5 +208,10 @@ class ActiveRecordModel implements InterfaceModel
                 )
             );
         }
+    }
+    
+    public function setIdentityValue($key, $val)
+    {
+        $_REQUEST[$key] = $this->identityValues[$key] = $val;
     }
 }

@@ -44,7 +44,7 @@ class Label extends AbstractComponent
     {
         $val = get_global($this->id, $_REQUEST);
         if (!empty($this->datasource)) {
-            $val = $this->getParameter('db-field-connected') ? $val : '[get-first-value]';
+            //$val = $this->getParameter('db-field-connected') ? $val : '[get-first-value]';
             $val = $this->getFromDatasource($val, $this->datasource->get());
         }
         if ($pointer = $this->getParameter('global-pointer')) {
@@ -79,10 +79,11 @@ class Label extends AbstractComponent
                return;
             }
         }
-        
-        if ($val == '[get-first-value]') {
+        //var_dump($val);
+        if ($val2 == '[get-first-value]') {
             return !empty($lst[0]) ? nvl($lst[0][1],$lst[0][0]) : null;
         }
+        
         if (is_array($lst)) {
             foreach($lst as $k => $rec) {
                 $rec = array_values($rec);

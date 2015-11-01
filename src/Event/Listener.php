@@ -5,10 +5,11 @@ class Listener
 {
     private $repo;
     
-    public function __construct($id, $event)
+    public function __construct($id, $event, $owner=null)
     {
         $this->repo['id'] = $id;
         $this->repo['event'] = $event;
+        $this->repo['owner'] = $owner;
     }
     
     public function setClosure($function)
@@ -55,5 +56,10 @@ class Listener
     public function getEvent()
     {
         return $this->repo['event'];
+    }
+    
+    public function getOwner()
+    {
+        return $this->repo['owner'];
     }
 }

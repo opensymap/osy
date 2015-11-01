@@ -12,7 +12,7 @@ class FieldModel
     
     public function __get($key)
     {
-        return array_key_exists($key,$this->properties) ? $this->properties[$key] : null;
+        return array_key_exists($key, $this->properties) ? $this->properties[$key] : null;
     }
     
     public function getHtmlName()

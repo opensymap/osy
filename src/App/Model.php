@@ -143,7 +143,8 @@ class Model
                 ON (o.o_id = p.o_id)
             LEFT JOIN  osy_res pcat
                 ON (p.p_id = pcat.v_id AND pcat.k_id in (\'osy-propertie-form\',\'osy-propertie-field\',\'osy-propertie-trigger\'))
-            WHERE o.o_id LIKE ?',
+            WHERE o.o_id LIKE ?
+            ORDER BY coalesce(o.o_pri,0)',
             array("{$objectId}%"),
             'ASSOC'
         );
@@ -223,7 +224,7 @@ class Model
                 if (!empty($trigger[$context])) {
                     foreach ($trigger[$context] as $event => $enabled) {
                         if ($enabled == 'yes' && !empty($trigger['code'])) {
-                            $listener = new EventListener($triggerId, $event);
+                            $listener = new EventListener($triggerId, $event, $trigger['owner']);
                             if ($error = $listener->setClosure($trigger['code'])) {
                                 $dispatcher->addError($error);
                                 continue;

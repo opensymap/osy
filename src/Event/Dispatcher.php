@@ -41,13 +41,16 @@ class Dispatcher
      *
      * @return integer number of execution
      */
-    public function dispatch($dispatchEvent, $dispatchListener=null)
+    public function dispatch($dispatchEvent, $dispatchListener = null, $eventOwner = null)
     {
         $nexec = 0;
         $neven = count($this->listeners[$dispatchEvent]);
         if (!empty($this->listeners[$dispatchEvent])) {
             foreach ($this->listeners[$dispatchEvent] as $listener) {
                 if (!empty($dispatchListener) && ($dispatchListener != $listener->getSha1Id())) {
+                    continue;
+                }
+                if (!empty($eventOwner) && ($eventOwner != $listener->getOwner())) {
                     continue;
                 }
                 try {

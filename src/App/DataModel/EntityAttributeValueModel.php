@@ -5,8 +5,10 @@ use Opensymap\App\DataModel\FieldModel;
 
 class EntityAttributeValueModel implements InterfaceModel
 {
-    private $properties = array();
+    
     private $fields = array();
+    private $identityValues = array();
+    private $properties = array();
     
     public function __construct($db, $properties, $identityValues, $response = null, $dispatcher = null)
     {
@@ -27,7 +29,7 @@ class EntityAttributeValueModel implements InterfaceModel
     
     public function delete()
     {
-        $this->dispatcher->dispatch('delete-before');
+        $this->dispatcher->dispatch('delete-before', null, $this->id);
         if ($this->deleteOnlyLinkedProperty){
             foreach ($this->fields as $field) {
                 //Delete only direct property
@@ -45,7 +47,7 @@ class EntityAttributeValueModel implements InterfaceModel
             );
             $this->db->delete($this->databaseTable, $condition);
         }
-        $this->dispatcher->dispatch('delete-after');
+        $this->dispatcher->dispatch('delete-after', null, $this->id);
     }
 
     public function isSoftDelete()
@@ -58,8 +60,16 @@ class EntityAttributeValueModel implements InterfaceModel
         $propertyCollection = $this->loadEavCollection();
         if (!empty($propertyCollection)) {
             foreach ($this->fields as $field) {
-                if (array_key_exists($field->propertyConstant,$propertyCollection)) {
-                    $_REQUEST[$field->fieldViewAssoc] = $propertyCollection[$field->propertyConstant];
+                if (
+                    array_key_exists(
+                        $field->propertyConstant, 
+                        $propertyCollection
+                    ) && 
+                    !array_key_exists(
+                        $field->fieldViewAssoc,
+                        $_REQUEST)
+                    ) {
+                    $_REQUEST[$field->fieldViewAssoc] = $propertyCollection[$field->propertyConstant][$field->name];
                 }
             }
         }
@@ -75,13 +85,24 @@ class EntityAttributeValueModel implements InterfaceModel
         
         $sql = "SELECT * ";
         $sql .= "FROM {$this->properties['databaseTable']} ";
-        $sql .= "WHERE {$this->properties['fieldForeignKey']} = ?";
+        $sql .= "WHERE {$this->properties['fieldForeignKey']} = ? ";
+        if ($this->identityCondition) {
+            $sql .= " AND ( {$this->identityCondition} )";
+        }
+        
         $par = array_values($identityValues);
         $rs = $this->db->exec_query($sql, $par, 'ASSOC');
 
         foreach ($rs as $rec) {
             $property = $rec[$this->fieldProperty];
-            $propertyCollection[$property] = $rec[$this->fieldValue];
+            //$propertyCollection[$property] = $rec[$field->fieldValue];
+            
+            foreach ($this->fields as $field) {
+                if ($property != $field->propertyConstant) {
+                    continue;
+                }
+                $propertyCollection[$property][$field->name] = $rec[$field->name];
+            }
         }
         
         return $propertyCollection;
@@ -89,11 +110,17 @@ class EntityAttributeValueModel implements InterfaceModel
     
     public function save()
     {
+        if (empty($this->identityValues)){
+            return;
+        }
         $propertyCollection = $this->loadEavCollection();
+        
         foreach ($this->fields as $field) {
+            //TODO : MULTIDIMENSIONAL UPDATE/INSERT
             $values = array(
-                $this->fieldValue => $_REQUEST[$field->fieldViewAssoc]
+                $field->name => $_REQUEST[$field->fieldViewAssoc]
             );
+            
             if (!array_key_exists($field->propertyConstant, $propertyCollection)) {
                 $values[$this->fieldProperty] = $field->propertyConstant;
                 $values[$this->fieldForeignKey] = array_values($this->identityValues)[0];
@@ -106,20 +133,21 @@ class EntityAttributeValueModel implements InterfaceModel
                 $this->update($values, $condition);
             }
         }
+        return $this->response;
     }
     
     private function insert($values)
     {
-        $this->dispatcher->dispatch('insert-before');
+        $this->dispatcher->dispatch('insert-before', null, $this->id);
         $this->db->insert($this->databaseTable, $values);
-        $this->dispatcher->dispatch('insert-after');
+        $this->dispatcher->dispatch('insert-after', null, $this->id);
     }
     
     private function update($values, $condition)
     {
-        $this->dispatcher->dispatch('update-before');
+        $this->dispatcher->dispatch('update-before', null, $this->id);
         $this->db->update($this->databaseTable, $values, $condition);
-        $this->dispatcher->dispatch('update-after');
+        $this->dispatcher->dispatch('update-after', null, $this->id);
     }
 
     public function __get($key)
